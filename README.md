@@ -1,4 +1,9 @@
-# ZMK 薙刀式 module
+# ZMK 薙刀式
+
+ZMK Firmwareで薙刀式かな入力を実現します。
+薙刀式は大岡俊彦氏が考案されたかな入力方式です。
+
+http://oookaworks.seesaa.net/article/456099128.html
 
 ## Github Actionsでbuildする場合
 
@@ -49,15 +54,15 @@ config/boards/your_keyboard/your_keyboard.keymapに薙刀式のコンボとレ�
         compatible = "zmk,combos";
         combo_ng_on {
             timeout-ms = <300>;
-            key-positions = <15 16>; # H, Jのキー位置に書き換えてください
+            key-positions = <15 16>; // H, Jのキー位置に書き換えてください
             bindings = <&ng_on>;
-            layers = <0>;
+            layers = <0>; // デフォルトレイヤーが0の前提
         };
         combo_ng_off {
             timeout-ms = <300>;
-            key-positions = <13 14>; # F, Gのキー位置に書き換えてください
+            key-positions = <13 14>; // F, Gのキー位置に書き換えてください
             bindings = <&ng_off>;
-            layers = <0 1>;
+            layers = <0 1>; // デフォルトレイヤーが0、薙刀式レイヤーが1の前提
         };
     };
 
@@ -76,7 +81,7 @@ config/boards/your_keyboard/your_keyboard.keymapに薙刀式のコンボとレ�
         };
 
         // 薙刀式に必要な31キー(Enterもシフトキーにしたいときは32キー)を定義してください。
-        // &kpの代わりに&ngを使います。通常はデフォルトレイヤーの次に配置してください。
+        // &kpの代わりに&ngを使います。通常はデフォルトレイヤーの次に配置してください(レイヤー番号1)。
         naginata_layer { 
             bindings = <
             // +----------+----------+----------+----------+----------+----------+----------+----------+----------+----------
@@ -87,7 +92,7 @@ config/boards/your_keyboard/your_keyboard.keymapに薙刀式のコンボとレ�
                 >;
         };
  
- 以下省略
+// 以下省略
 ```
 
 ## ローカルでbuildする場合の例
