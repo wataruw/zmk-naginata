@@ -1,5 +1,5 @@
 #pragma once
-#include "nglist.h"
+#include <zmk_naginata/nglist.h>
 
 #define LIST_SIZE 5 // 集合の最大サイズ
 
