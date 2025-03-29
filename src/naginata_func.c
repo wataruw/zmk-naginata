@@ -121,6 +121,7 @@ void ngh_JKD() { // ？{改行}
 
 void ngh_JKC() { // ！{改行}
     raise_zmk_keycode_state_changed_from_encoded(LS(N1), true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LS(N1), false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
