@@ -50,11 +50,12 @@ void nofunc() {}
 void switch_to_hex_input() {
     switch (naginata_config.os) {
         case NG_MAC:
-            raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(F20, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(F20, false, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, false, timestamp);
-            k_sleep(K_MSEC(100));
+            raise_zmk_keycode_state_changed_from_encoded(LANG2, true, timestamp);  // 未確定文字を確定する
+            raise_zmk_keycode_state_changed_from_encoded(LANG2, false, timestamp);
+            k_sleep(K_MSEC(10));
+            raise_zmk_keycode_state_changed_from_encoded(LC(F20), true, timestamp);
+            raise_zmk_keycode_state_changed_from_encoded(LC(F20), false, timestamp);
+            k_sleep(K_MSEC(50));
             return;
         case NG_WIN:
             return;
@@ -67,11 +68,11 @@ void switch_to_hex_input() {
 void return_to_kana_input() {
     switch (naginata_config.os) {
         case NG_MAC:
-            raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(F19, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(F19, false, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, false, timestamp);
-            k_sleep(K_MSEC(100));
+            raise_zmk_keycode_state_changed_from_encoded(LS(LANG1), true, timestamp);  // 未確定文字を確定する
+            raise_zmk_keycode_state_changed_from_encoded(LS(LANG1), false, timestamp);
+            k_sleep(K_MSEC(10));
+            raise_zmk_keycode_state_changed_from_encoded(LANG1, true, timestamp);
+            raise_zmk_keycode_state_changed_from_encoded(LANG1, false, timestamp);
             return;
         case NG_WIN:
         case NG_LINUX:
@@ -83,19 +84,19 @@ void press_compose_key() {
     switch (naginata_config.os) {
         case NG_MAC:
             raise_zmk_keycode_state_changed_from_encoded(LEFT_ALT, true, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_WIN:
             raise_zmk_keycode_state_changed_from_encoded(RIGHT_ALT, true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(RIGHT_ALT, false, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_LINUX:
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_IOS:
     }
@@ -105,17 +106,17 @@ void release_compose_key() {
     switch (naginata_config.os) {
         case NG_MAC:
             raise_zmk_keycode_state_changed_from_encoded(LEFT_ALT, false, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_WIN:
             raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_LINUX:
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
-            k_sleep(K_MSEC(100));
+            k_sleep(K_MSEC(50));
             return;
         case NG_IOS:
     }
@@ -126,16 +127,16 @@ void input_unicode_hex(int n1, int n2, int n3, int n4) {
     press_compose_key();
     raise_zmk_keycode_state_changed_from_encoded(n1, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(n1, false, timestamp);
-    k_sleep(K_MSEC(100));
+    k_sleep(K_MSEC(10));
     raise_zmk_keycode_state_changed_from_encoded(n2, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(n2, false, timestamp);
-    k_sleep(K_MSEC(100));
+    k_sleep(K_MSEC(10));
     raise_zmk_keycode_state_changed_from_encoded(n3, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(n3, false, timestamp);
-    k_sleep(K_MSEC(100));
+    k_sleep(K_MSEC(10));
     raise_zmk_keycode_state_changed_from_encoded(n4, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(n4, false, timestamp);
-    k_sleep(K_MSEC(100));
+    k_sleep(K_MSEC(10));
     release_compose_key();
     return_to_kana_input();
 }
