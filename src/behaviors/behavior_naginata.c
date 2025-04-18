@@ -699,6 +699,7 @@ static int behavior_naginata_init(const struct device *dev) {
     initializeListArray(&nginput);
     pressed_keys = 0UL;
     n_pressed_keys = 0;
+    naginata_config.os =  NG_MAC;
 
     return 0;
 };
