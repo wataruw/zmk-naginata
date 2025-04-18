@@ -309,20 +309,27 @@ void ngh_MCQ() { // ｜{改行}
 }
 
 void ngh_MCW() { // 　　　×　　　×　　　×{改行 2}
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex(N0, N0, D, N7);
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex(N0, N0, D, N7);
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
-    input_unicode_hex(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
