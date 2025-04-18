@@ -9,10 +9,6 @@
 #include <zmk/behavior_queue.h>
 #include <zmk_naginata/naginata_func.h>
 
-// #define HOST_OS 0 // Windows
-// #define HOST_OS 2 // Linux
-#define HOST_OS 2 // MacOS
-
 int64_t timestamp;
 
 #define NG_WIN 0
