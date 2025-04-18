@@ -359,36 +359,21 @@ def outputHenshu(pk, m, k)
       end
       d << $henshu[i]
     else
-      d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, true, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(F20, true, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(F20, false, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, false, timestamp);"
-      d << "k_sleep(K_MSEC(100));"
-
       uhex = str2hex(i)
       uhex.each do |u|
-        d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_ALT, true, timestamp);"
-        d << "k_sleep(K_MSEC(100));"
-        u.chars.each do |k|
+        ks = u.chars.map do |k|
           if ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].index(k)
             k = 'N' + k
+          else
+            k
           end
-          d << "raise_zmk_keycode_state_changed_from_encoded(#{k}, true, timestamp);"
-          d << "raise_zmk_keycode_state_changed_from_encoded(#{k}, false, timestamp);"
-          d << "k_sleep(K_MSEC(100));"
         end
-        d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_ALT, false, timestamp);"
-        d << "k_sleep(K_MSEC(100));"
+        d << "input_unicode_hex(#{ks[0]}, #{ks[1]}, #{ks[2]}, #{ks[3]});"
       end
-    
-      d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, true, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(F19, true, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(F19, false, timestamp);"
-      d << "raise_zmk_keycode_state_changed_from_encoded(LEFT_CONTROL, false, timestamp);"
       uc = true
     end
   end
-  $hcase += d.flatten.map{|x| "  #{x}"}
+  $hcase += d.flatten.map{|x| "    #{x}"}
   $hcase << "}\n\n"
   $hkey << sprintf("  {.shift = %-10s , .douji = B_%-5s , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_%-6s }, // #{m}", pk, k, pk.gsub(/\|*B_/, "")+k)
 end

@@ -2,6 +2,12 @@
 void naginata_on(void);
 // void naginata_off(void);
 void nofunc(void);
+void switch_to_hex_input(void);
+void return_to_kana_input(void);
+void press_compose_key(void);
+void release_compose_key(void);
+void input_unicode_hex(int, int, int, int);
+
 void ng_T(void);
 void ng_Y(void);
 void ng_ST(void);
