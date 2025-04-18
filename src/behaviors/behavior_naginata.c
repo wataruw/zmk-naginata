@@ -176,7 +176,7 @@ static naginata_kanamap ngdickana[] = {
     {.shift = 0UL     , .douji = B_F|B_SEMI     , .kana = {B, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぶ
     {.shift = 0UL     , .douji = B_F|B_P        , .kana = {B, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // べ
     {.shift = NONE    , .douji = B_J|B_Z        , .kana = {B, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぼ
-    {.shift = 0UL     , .douji = B_F|B_L        , .kana = {V, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ゔ
+    {.shift = 0UL     , .douji = B_F|B_L|B_SEMI , .kana = {V, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ゔ
 
     // 半濁音
     {.shift = NONE    , .douji = B_M|B_C        , .kana = {G, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぱ
