@@ -322,7 +322,7 @@ $henshu = {
   "{↓}" => ["ng_down(1);"],
   "{改行 2}" => ["raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);"] * 2,
   "{改行}" => ["raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);"],
-  "+{Esc 2}" => ["raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, false, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);"],
+  "+{Esc 2}" => ["raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, false, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, true, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(ESC, false, timestamp);", "raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);"],
   "+{← 7}" => ["raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);", "ng_left(7);", "raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);"],
   "+{→ 7}" => ["raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);", "ng_right(7);", "raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);"],
  }

@@ -249,6 +249,8 @@ void ngh_DFP() { // +{Esc 2}
     raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ESC, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ESC, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(ESC, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(ESC, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);
 }
 
