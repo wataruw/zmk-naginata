@@ -110,3 +110,11 @@ rm -rf build
 west build -b seeeduino_xiao_ble -- -DSHIELD=your_keyboard_right -DZMK_CONFIG="/Users/foo/zmk-config/config" -DZMK_EXTRA_MODULES="/Users/foo/zmk-naginata"
 cp build/zephyr/zmk.uf2 ~/zmk_right.uf2
 ```
+
+## 編集モードへの対応
+
+Macでは下の対応をすることによって編集モードで記号入力を行うことができます。
+
+* Macの「Unicode 16進数入力」を入力ソースに追加する
+* Karabiner-Elementsをインストール
+* unicode_hex_input_switcher.jsonをKarabiner-Elementsで有効にする
