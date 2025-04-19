@@ -160,9 +160,15 @@ void ngh_JKW() { // ／{改行}
     input_unicode_hex(F, F, N0, F);
 }
 
-// void ngh_JKE() { // /*ディ*/
+void ngh_JKE() { // /*ディ*/
+    raise_zmk_keycode_state_changed_from_encoded(D, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(D, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(H, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(H, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(I, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(I, false, timestamp);
     
-// }
+}
 
 void ngh_JKR() { // ^s
     ng_save();

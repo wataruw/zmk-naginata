@@ -14,7 +14,7 @@ void ng_ST(void);
 void ng_SY(void);
 void ngh_JKQ(void);
 void ngh_JKW(void);
-// void ngh_JKE(void);
+void ngh_JKE(void);
 void ngh_JKR(void);
 void ngh_JKT(void);
 void ngh_JKA(void);
