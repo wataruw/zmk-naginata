@@ -179,11 +179,11 @@ static naginata_kanamap ngdickana[] = {
     {.shift = 0UL     , .douji = B_F|B_L|B_SEMI , .kana = {V, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ゔ
 
     // 半濁音
-    {.shift = NONE    , .douji = B_M|B_C        , .kana = {G, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぱ
-    {.shift = NONE    , .douji = B_M|B_X        , .kana = {G, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぴ
-    {.shift = NONE    , .douji = B_V|B_SEMI     , .kana = {G, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぷ
-    {.shift = NONE    , .douji = B_V|B_P        , .kana = {G, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぺ
-    {.shift = NONE    , .douji = B_M|B_Z        , .kana = {G, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぽ
+    {.shift = NONE    , .douji = B_M|B_C        , .kana = {P, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぱ
+    {.shift = NONE    , .douji = B_M|B_X        , .kana = {P, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぴ
+    {.shift = NONE    , .douji = B_V|B_SEMI     , .kana = {P, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぷ
+    {.shift = NONE    , .douji = B_V|B_P        , .kana = {P, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぺ
+    {.shift = NONE    , .douji = B_M|B_Z        , .kana = {P, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぽ
 
     // 小書き
     {.shift = NONE    , .douji = B_Q|B_H        , .kana = {X, Y, A, NONE, NONE, NONE      }, .func = nofunc }, // ゃ
