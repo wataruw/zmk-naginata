@@ -674,10 +674,7 @@ bool naginata_release(struct zmk_behavior_binding *binding,
                 removeFromListArrayAt(&nginput, 0);
             }
         } else {
-            NGList a;
-            initializeList(&a);
-            addToListArray(&nginput, &a);
-            if (nginput.size > 1 || number_of_candidates(&(nginput.elements[0]), false) == 1) {
+            if (nginput.size > 0 && number_of_candidates(&(nginput.elements[0]), false) == 1) {
                 ng_type(&(nginput.elements[0]));
                 removeFromListArrayAt(&nginput, 0);
             }
