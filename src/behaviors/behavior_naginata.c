@@ -76,9 +76,7 @@ static int8_t n_pressed_keys = 0;   // 押しているキーの数
 // EEPROMに保存する設定
 typedef union {
     uint8_t os : NG_MAC;
-    bool live_conv : true;
     bool tategaki : true;
-    bool kouchi_shift : true;
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -488,7 +486,8 @@ int number_of_candidates(NGList *keys, bool strict) {
                         // シェ、チェは2キーでnoc=1になるが、3キー目を押していないので早期確定してはいけない
                         // commaで「ん」と早期確定してはいけない
                         // if (keys->size < ..) { としたいが
-                        if (keyset == (B_M | B_R) || keyset == (B_M | B_G) || keyset == B_COMMA){
+                        // if (keyset == (B_M | B_R) || keyset == (B_M | B_G) || keyset == B_COMMA){
+                        if (ngdickana[i].douji != keyset) {
                             noc = 2;
                         } else {
                             noc++;
