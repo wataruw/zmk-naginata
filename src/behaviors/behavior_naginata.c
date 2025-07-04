@@ -353,156 +353,87 @@ static naginata_kanamap ngdickana[] = {
 
 };
 
-int number_of_candidates(NGList *keys, bool strict) {
-    LOG_DBG(">NAGINATA number_of_candidates");
+// Helper function for counting matches/candidates
+static int count_kana_entries(NGList *keys, bool exact_match) {
+  if (keys->size == 0) return 0;
 
-    if (keys->size == 0)
-        return 0;
+  int count = 0;
+  uint32_t keyset0 = 0UL, keyset1 = 0UL, keyset2 = 0UL;
+  
+  // keysetを配列にしたらバイナリサイズが増えた
+  switch (keys->size) {
+    case 1:
+      keyset0 = ng_key[keys->elements[0] - A];
+      break;
+    case 2:
+      keyset0 = ng_key[keys->elements[0] - A];
+      keyset1 = ng_key[keys->elements[1] - A];
+      break;
+    default:
+      keyset0 = ng_key[keys->elements[0] - A];
+      keyset1 = ng_key[keys->elements[1] - A];
+      keyset2 = ng_key[keys->elements[2] - A];
+      break;
+  }
 
-    int noc = 0;
+  for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[i]; i++) {
+    bool matches = false;
 
-    if (strict) { // 完全一致
-        if (keys->size == 1 && (compareList0(keys, SPACE) || compareList0(keys, ENTER))) {
-            noc = 1;
-        } else if (keys->size > 1 && (compareList0(keys, SPACE) || compareList0(keys, ENTER))) {
-            uint32_t keyset = 0UL;
-            for (int i = 1; i < keys->size; i++) {
-                keyset |= ng_key[keys->elements[i] - A];
-            }
-            for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                if (ngdickana[i].shift == B_SPACE && ngdickana[i].douji == keyset) {
-                    noc++;
-                    if (noc > 1)
-                        break;
-                }
-            }
+    switch (keys->size) {
+      case 1:
+        if (exact_match) {
+          matches = (ngdickana[i].shift == keyset0) || 
+                   (ngdickana[i].shift == 0UL && ngdickana[i].douji == keyset0);
         } else {
-            if (keys->size == 3 && compareList01(keys, D, F)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_D | B_F) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, C, V)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_C | B_V) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, J, K)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_J | B_K) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, M, COMMA)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_M | B_COMMA) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else {
-                uint32_t keyset = 0UL;
-                for (int i = 0; i < keys->size; i++) {
-                    keyset |= ng_key[keys->elements[i] - A];
-                }
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == 0UL && ngdickana[i].douji == keyset) {
-                        noc++;
-                        if (noc > 1)
-                            break;
-                    }
-                }
-            }
+          matches = ((ngdickana[i].shift & keyset0) == keyset0) ||
+                   (ngdickana[i].shift == 0UL && (ngdickana[i].douji & keyset0) == keyset0);
         }
-
-    } else { // 部分一致
-        if (keys->size == 1 && (compareList0(keys, SPACE) || compareList0(keys, ENTER))) {
-            noc = 2;
-        } else if (keys->size == 2 &&
-                   (compareList01(keys, D, F) || compareList01(keys, C, V) ||
-                    compareList01(keys, J, K) || compareList01(keys, M, COMMA))) {
-            noc = 2;
-        } else if (keys->size > 1 && (compareList0(keys, SPACE) || compareList0(keys, ENTER))) {
-            uint32_t keyset = 0UL;
-            for (int i = 1; i < keys->size; i++) {
-                keyset |= ng_key[keys->elements[i] - A];
-            }
-            for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                if (ngdickana[i].shift == B_SPACE && ((ngdickana[i].douji & keyset) == keyset)) {
-                    noc++;
-                    if (noc > 1)
-                        break;
-                }
-            }
+        break;
+      case 2:
+        if (exact_match) {
+          matches = (ngdickana[i].shift == (keyset0 | keyset1)) ||
+                   (ngdickana[i].shift == keyset0 && ngdickana[i].douji == keyset1) ||
+                   (ngdickana[i].shift == 0UL && ngdickana[i].douji == (keyset0 | keyset1));
         } else {
-            if (keys->size == 3 && compareList01(keys, D, F)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_D | B_F) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, C, V)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_C | B_V) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, J, K)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_J | B_K) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else if (keys->size == 3 && compareList01(keys, M, COMMA)) {
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == (B_M | B_COMMA) &&
-                        ngdickana[i].douji == ng_key[keys->elements[2] - A]) {
-                        noc = 1;
-                        break;
-                    }
-                }
-            } else {
-                uint32_t keyset = 0UL;
-                for (int i = 0; i < keys->size; i++) {
-                    keyset |= ng_key[keys->elements[i] - A];
-                }
-                for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
-                    if (ngdickana[i].shift == 0UL && ((ngdickana[i].douji & keyset) == keyset)) {
-                        // シェ、チェは2キーでnoc=1になるが、3キー目を押していないので早期確定してはいけない
-                        // commaで「ん」と早期確定してはいけない
-                        // if (keys->size < ..) { としたいが
-                        // if (keyset == (B_M | B_R) || keyset == (B_M | B_G) || keyset == B_COMMA){
-                        if (ngdickana[i].douji != keyset) {
-                            noc = 2;
-                        } else {
-                            noc++;
-                        }
-                        if (noc > 1)
-                            break;
-                    }
-                }
-            }
+          matches = (ngdickana[i].shift == (keyset0 | keyset1)) ||
+                   (ngdickana[i].shift == keyset0 && (ngdickana[i].douji & keyset1) == keyset1) ||
+                   (ngdickana[i].shift == 0UL && (ngdickana[i].douji & (keyset0 | keyset1)) == (keyset0 | keyset1));
+          // しぇ、ちぇ、など2キーで確定してはいけない
+          if (matches && (ngdickana[i].shift | ngdickana[i].douji) != (keyset0 | keyset1)) {
+            count = 2;
+          }
         }
+        break;
+      default:
+        if (exact_match) {
+          matches = (ngdickana[i].shift == (keyset0 | keyset1) && ngdickana[i].douji == keyset2) ||
+                   (ngdickana[i].shift == keyset0 && ngdickana[i].douji == (keyset1 | keyset2)) ||
+                   (ngdickana[i].shift == 0UL && ngdickana[i].douji == (keyset0 | keyset1 | keyset2));
+        } else {
+          matches = (ngdickana[i].shift == (keyset0 | keyset1) && (ngdickana[i].douji & keyset2) == keyset2) ||
+                   (ngdickana[i].shift == keyset0 && (ngdickana[i].douji & (keyset1 | keyset2)) == (keyset1 | keyset2)) ||
+                   (ngdickana[i].shift == 0UL && (ngdickana[i].douji & (keyset0 | keyset1 | keyset2)) == (keyset0 | keyset1 | keyset2));
+        }
+        break;
     }
 
-    LOG_DBG("<NAGINATA number_of_candidates %d", noc);
+    if (matches) {
+      count++;
+      if (count > 1) break;
+    }
+  }
 
-    return noc;
+  return count;
+}
+
+int number_of_matches(NGList *keys) {  
+  int result = count_kana_entries(keys, true);
+  return result;
+}
+
+int number_of_candidates(NGList *keys) {
+  int result = count_kana_entries(keys, false);
+  return result;
 }
 
 // キー入力を文字に変換して出力する
@@ -593,7 +524,7 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
             // 前のキーとの同時押しの可能性があるなら前に足す
             // 同じキー連打を除外
             if (nginput.size > 0 && a.elements[a.size - 1] != keycode &&
-                number_of_candidates(&b, false) > 0) {
+                number_of_candidates(&b) > 0) {
                 removeFromListArrayAt(&nginput, nginput.size - 1);
                 addToListArray(&nginput, &b);
                 // 前のキーと同時押しはない
@@ -629,13 +560,13 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
                 addToList(&rskc, l.elements[j]);
             }
 
-            if (c < 0 && ((brs & pressed_keys) == brs) && number_of_candidates(&rskc, true) > 0) {
+            if (c < 0 && ((brs & pressed_keys) == brs) && number_of_matches(&rskc) > 0) {
                 nginput.elements[nginput.size - 1] = rskc;
                 break;
             }
         }
 
-        if (nginput.size > 1 || number_of_candidates(&(nginput.elements[0]), false) == 1) {
+        if (nginput.size > 1 || number_of_candidates(&(nginput.elements[0])) == 1) {
             ng_type(&(nginput.elements[0]));
             removeFromListArrayAt(&nginput, 0);
         }
@@ -674,7 +605,7 @@ bool naginata_release(struct zmk_behavior_binding *binding,
                 removeFromListArrayAt(&nginput, 0);
             }
         } else {
-            if (nginput.size > 0 && number_of_candidates(&(nginput.elements[0]), false) == 1) {
+            if (nginput.size > 0 && number_of_candidates(&(nginput.elements[0])) == 1) {
                 ng_type(&(nginput.elements[0]));
                 removeFromListArrayAt(&nginput, 0);
             }
