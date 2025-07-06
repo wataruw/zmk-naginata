@@ -68,15 +68,15 @@ static NGListArray nginput;
 static uint32_t pressed_keys = 0UL; // 押しているキーのビットをたてる
 static int8_t n_pressed_keys = 0;   // 押しているキーの数
 
-#define NG_WIN 0
-#define NG_MAC 1
+#define NG_WINDOWS 0
+#define NG_MACOS 1
 #define NG_LINUX 2
 #define NG_IOS 3
 
 // EEPROMに保存する設定
 typedef union {
-    uint8_t os : NG_MAC;
-    bool tategaki : true;
+    uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
+    bool tategaki : true; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -541,6 +541,10 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
         static uint32_t rs[10][2] = {{D, F},     {C, V}, {J, K}, {M, COMMA}, {SPACE, 0},
                                      {ENTER, 0}, {F, 0}, {V, 0}, {J, 0},     {M, 0}};
 
+        uint32_t keyset = 0UL;
+        for (int i = 0; i < nginput.elements[0].size; i++) {
+            keyset |= ng_key[nginput.elements[0].elements[i] - A];
+        }
         for (int i = 0; i < 10; i++) {
             NGList rskc;
             initializeList(&rskc);
@@ -560,7 +564,7 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
                 addToList(&rskc, l.elements[j]);
             }
 
-            if (c < 0 && ((brs & pressed_keys) == brs) && number_of_matches(&rskc) > 0) {
+            if (c < 0 && ((brs & pressed_keys) == brs) && (keyset & brs) != brs && number_of_matches(&rskc) > 0) {
                 nginput.elements[nginput.size - 1] = rskc;
                 break;
             }
@@ -626,7 +630,7 @@ static int behavior_naginata_init(const struct device *dev) {
     initializeListArray(&nginput);
     pressed_keys = 0UL;
     n_pressed_keys = 0;
-    naginata_config.os =  NG_MAC;
+    naginata_config.os =  NG_MACOS;
 
     return 0;
 };
@@ -634,6 +638,25 @@ static int behavior_naginata_init(const struct device *dev) {
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                      struct zmk_behavior_binding_event event) {
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
+
+    // F15が押されたらnaginata_config.os=NG_WINDOWS
+    switch (binding->param1) {
+        case F15:
+            naginata_config.os = NG_WINDOWS;
+            return ZMK_BEHAVIOR_OPAQUE;
+        case F16:
+            naginata_config.os = NG_MACOS;
+            return ZMK_BEHAVIOR_OPAQUE;
+        case F17:
+            naginata_config.os = NG_LINUX;
+            return ZMK_BEHAVIOR_OPAQUE;
+        case F18:
+            naginata_config.tategaki = true;
+            return ZMK_BEHAVIOR_OPAQUE;
+        case F19:
+            naginata_config.tategaki = false;
+            return ZMK_BEHAVIOR_OPAQUE;
+    }
 
     timestamp = event.timestamp;
     naginata_press(binding, event);
