@@ -271,13 +271,15 @@ void ngh_JKD() { // ？{改行}
 }
 
 void ngh_JKF() { // 「{改行}
-    input_unicode_hex(N3, N0, N0, C);
+    raise_zmk_keycode_state_changed_from_encoded(LBKT, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LBKT, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_JKG() { // ({改行}
-    input_unicode_hex(F, F, N0, N8);
+    raise_zmk_keycode_state_changed_from_encoded(LPAR, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LPAR, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
@@ -310,13 +312,15 @@ void ngh_JKC() { // ！{改行}
 }
 
 void ngh_JKV() { // 」{改行}
-    input_unicode_hex(N3, N0, N0, D);
+    raise_zmk_keycode_state_changed_from_encoded(RBKT, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(RBKT, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_JKB() { // ){改行}
-    input_unicode_hex(F, F, N0, N9);
+    raise_zmk_keycode_state_changed_from_encoded(RPAR, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(RPAR, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
