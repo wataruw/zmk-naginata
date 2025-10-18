@@ -204,9 +204,14 @@ void ngh_JKW() { // ぬ5 ……を「ぬ5」に登録
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
-// void ngh_JKE() { // /*ディ*/
-// This function is commented out in the reference file
-// }
+void ngh_JKE() { // /*ディ*/
+    raise_zmk_keycode_state_changed_from_encoded(D, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(D, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(H, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(H, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(I, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(I, false, timestamp);
+}
 
 void ngh_JKR() { // ぬ6 ――を「ぬ6」に登録
     raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
