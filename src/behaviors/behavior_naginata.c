@@ -78,11 +78,20 @@ static bool naginata_layer_active = true; // 薙刀式レイヤーが有効か�
 static int8_t n_hid_modifiers = 0;   // HID修飾キー(0xE0-0xE7)の押下数
 static int8_t n_layer_hold_keys = 0; // レイヤーキー(&mo, &lt)のホールド押下数
 
-// 透過/レイヤーホールド系ビヘイビアのデバイス
+// 透過ビヘイビアのデバイス
 // Zephyr/ZMKのバージョン差異で behavior_dev の型が異なる場合があるため、void*で保持する
 static const void *trans_bhv_dev = NULL;
 static const void *mo_bhv_dev = NULL; // &mo (momentary layer)
 static const void *lt_bhv_dev = NULL; // &lt (layer tap)
+
+// LOWER/RAISE レイヤーのインデックス（必要に応じて変更）
+#ifndef NG_LOWER_LAYER_INDEX
+#define NG_LOWER_LAYER_INDEX 1
+#endif
+#ifndef NG_RAISE_LAYER_INDEX
+#define NG_RAISE_LAYER_INDEX 2
+#endif
+static bool ng_layer_hold_active = false;
 
 #define NG_WINDOWS 0
 #define NG_MACOS 1
@@ -96,6 +105,22 @@ typedef union {
 } user_config_t;
 
 extern user_config_t naginata_config;
+
+// &ng が処理対象とするキーかどうか（アルファ/句読点/スペース/エンター）
+static inline bool is_ng_handled_keycode(uint32_t kc) {
+    switch (kc) {
+    case A ... Z:
+    case SPACE:
+    case ENTER:
+    case DOT:
+    case COMMA:
+    case SLASH:
+    case SEMI:
+        return true;
+    default:
+        return false;
+    }
+}
 
 static const uint32_t ng_key[] = {
     [A - A] = B_A,     [B - A] = B_B,         [C - A] = B_C,         [D - A] = B_D,
@@ -692,11 +717,12 @@ static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(behavior_naginata_keycode, naginata_keycode_state_changed_listener);
 ZMK_SUBSCRIPTION(behavior_naginata_keycode, zmk_keycode_state_changed);
 
-// レイヤーキー（&mo, &lt）のホールド検出: position_state_changed を購読し、実効バインディングを走査
-// レイヤーホールド判定はデバイスポインタ一致で行う
+// レイヤーキー（&mo）のホールド検出
 static inline bool is_layer_hold_behavior_ptr(const void *dev_ptr) {
     return dev_ptr && (dev_ptr == mo_bhv_dev || dev_ptr == lt_bhv_dev);
 }
+
+// レイヤーキー（&mo）のホールド検出は、対象レイヤーのアクティブ状態で判断する
 
 static const struct zmk_behavior_binding *
 get_effective_binding_for_position(uint32_t position) {
@@ -734,6 +760,9 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
     if (!trans_bhv_dev) {
         // 戻り値は実体としては struct device* だが、上で void* として保持
         trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
+        if (!trans_bhv_dev) {
+            trans_bhv_dev = (const void *)zmk_behavior_get_binding("trans");
+        }
     }
     if (!mo_bhv_dev) {
         mo_bhv_dev = (const void *)zmk_behavior_get_binding("MO");
@@ -747,25 +776,37 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
             lt_bhv_dev = (const void *)zmk_behavior_get_binding("lt");
         }
     }
-
-    // 実効バインディングを取得
+    // LOWER/RAISE レイヤのアクティブ状態でホールド中かを判定
     const struct zmk_behavior_binding *binding = get_effective_binding_for_position(ev->position);
-    if (!binding || !binding->behavior_dev) {
-        return ZMK_EV_EVENT_BUBBLE;
+    if (binding && binding->behavior_dev && is_layer_hold_behavior_ptr((const void *)binding->behavior_dev)) {
+        if (ev->state) {
+            n_layer_hold_keys = 1;
+            naginata_deactivate_if_needed();
+            LOG_DBG("Layer hold press (by binding) detected at pos %u", ev->position);
+        } else {
+            n_layer_hold_keys = 0;
+            naginata_try_activate();
+            LOG_DBG("Layer hold release (by binding) detected at pos %u", ev->position);
+        }
     }
 
-    // レイヤーホールド系（&mo, &lt）のみカウント（デバイスポインタで判定）
-    if (is_layer_hold_behavior_ptr((const void *)binding->behavior_dev)) {
-        if (ev->state) {
-            n_layer_hold_keys++;
+    // 次に、LOWER/RAISE レイヤのアクティブ状態でホールド中かを判定（フォールバック）
+    zmk_keymap_layer_id_t lower_id = zmk_keymap_layer_index_to_id((zmk_keymap_layer_index_t)NG_LOWER_LAYER_INDEX);
+    zmk_keymap_layer_id_t raise_id = zmk_keymap_layer_index_to_id((zmk_keymap_layer_index_t)NG_RAISE_LAYER_INDEX);
+    bool lower_active = lower_id != ZMK_KEYMAP_LAYER_ID_INVAL ? zmk_keymap_layer_active(lower_id) : false;
+    bool raise_active = raise_id != ZMK_KEYMAP_LAYER_ID_INVAL ? zmk_keymap_layer_active(raise_id) : false;
+    bool hold_now_active = lower_active || raise_active;
+
+    if (hold_now_active != ng_layer_hold_active) {
+        ng_layer_hold_active = hold_now_active;
+        if (ng_layer_hold_active) {
+            n_layer_hold_keys = 1; // 0/1 のフラグとして利用
             naginata_deactivate_if_needed();
-            LOG_DBG("Layer hold press detected at pos %u (count=%d)", ev->position, n_layer_hold_keys);
+            LOG_DBG("Layer hold active (LOWER=%d, RAISE=%d)", lower_active, raise_active);
         } else {
-            if (n_layer_hold_keys > 0) {
-                n_layer_hold_keys--;
-            }
+            n_layer_hold_keys = 0;
             naginata_try_activate();
-            LOG_DBG("Layer hold release detected at pos %u (count=%d)", ev->position, n_layer_hold_keys);
+            LOG_DBG("Layer hold inactive");
         }
     }
 
@@ -787,20 +828,12 @@ static int behavior_naginata_init(const struct device *dev) {
     naginata_layer_active = true;
     n_hid_modifiers = 0;
     n_layer_hold_keys = 0;
+    ng_layer_hold_active = false;
 
     if (!trans_bhv_dev) {
         trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
-    }
-    if (!mo_bhv_dev) {
-        mo_bhv_dev = (const void *)zmk_behavior_get_binding("MO");
-        if (!mo_bhv_dev) {
-            mo_bhv_dev = (const void *)zmk_behavior_get_binding("mo");
-        }
-    }
-    if (!lt_bhv_dev) {
-        lt_bhv_dev = (const void *)zmk_behavior_get_binding("LT");
-        if (!lt_bhv_dev) {
-            lt_bhv_dev = (const void *)zmk_behavior_get_binding("lt");
+        if (!trans_bhv_dev) {
+            trans_bhv_dev = (const void *)zmk_behavior_get_binding("trans");
         }
     }
 
@@ -833,6 +866,17 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     }
 
     timestamp = event.timestamp;
+
+    // &ng が扱わないキー（モディファイ、&mo など）は常に透過
+    if (!is_ng_handled_keycode(binding->param1)) {
+        return ZMK_BEHAVIOR_TRANSPARENT;
+    }
+
+    // Naginata 非アクティブ時は透過させ、下位レイヤー/他ビヘイビアに処理を委ねる
+    if (!naginata_layer_active) {
+        return ZMK_BEHAVIOR_TRANSPARENT;
+    }
+
     naginata_press(binding, event);
 
     return ZMK_BEHAVIOR_OPAQUE;
@@ -843,6 +887,16 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     timestamp = event.timestamp;
+    // &ng が扱わないキー（モディファイ、&mo など）は常に透過
+    if (!is_ng_handled_keycode(binding->param1)) {
+        return ZMK_BEHAVIOR_TRANSPARENT;
+    }
+    
+    // Naginata 非アクティブ時は透過させ、下位レイヤー/他ビヘイビアに処理を委ねる
+    if (!naginata_layer_active) {
+        return ZMK_BEHAVIOR_TRANSPARENT;
+    }
+
     naginata_release(binding, event);
 
     return ZMK_BEHAVIOR_OPAQUE;
