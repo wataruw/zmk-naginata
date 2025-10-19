@@ -1,10 +1,56 @@
 # Testing Guide for Modifier/Layer Key Support
 
-## Overview
-This document describes how to test the newly implemented modifier and layer key support that allows switching from the naginata layer to other layers.
+## ⚠️ IMPORTANT: Feature Removed (2025-10-19)
 
-## What Was Changed
-Added functionality to temporarily disable naginata input processing when modifier keys or layer switching keys are pressed, allowing users to switch to other layers (0, 1, 2) from the naginata layer (3).
+**The modifier and layer key detection feature described in this document has been removed** due to the use of a non-existent ZMK API function (`zmk_keymap_position_binding`).
+
+See [LINKER_ERROR_FIX.md](LINKER_ERROR_FIX.md) for details on why this feature was removed.
+
+**Current Behavior**: The naginata behavior remains active at all times and does not automatically disable when modifier or layer keys are pressed.
+
+## Current Testing Guidelines
+
+### Test 1: Basic Naginata Input
+**Setup:** Switch to the naginata layer (layer 1) using the H+J combo
+**Steps:**
+1. Type various key combinations that should produce Japanese characters
+2. Test single key presses (e.g., Q, W, E, R, T)
+3. Test simultaneous key presses (e.g., Q+W, E+R)
+4. Test with shift keys (Space, Enter)
+
+**Expected Result:**
+- Japanese characters should be output correctly according to the naginata layout
+- All key combinations should work as expected
+
+### Test 2: Switching Between Naginata and Regular Input
+**Setup:** Be on the default layer (layer 0)
+**Steps:**
+1. Press H+J simultaneously to activate naginata layer
+2. Type some Japanese using naginata
+3. Press F+G simultaneously to deactivate naginata layer
+4. Type regular characters
+
+**Expected Result:**
+- Switching between layers should work correctly
+- Japanese input works when naginata is active
+- Regular input works when naginata is deactivated
+
+### Test 3: Known Limitation - Modifier Keys
+**Setup:** Be on the naginata layer (layer 1)
+**Steps:**
+1. Try to use Ctrl+C, Ctrl+V, or other keyboard shortcuts
+2. Try to switch to other layers using &mo or &to keys
+
+**Expected Result (Current Limitation):**
+- Modifier keys and shortcuts may not work as expected on the naginata layer
+- Workaround: Switch back to layer 0 (using F+G combo) before using shortcuts
+- Workaround: Define layer switching keys on non-naginata layers
+
+---
+
+## Historical Testing Documentation
+
+The following test cases are for the **previous implementation** that has been removed.
 
 ## Test Cases
 
