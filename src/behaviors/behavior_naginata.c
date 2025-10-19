@@ -720,6 +720,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     
     const char *dev_name = dev->name;
     if (dev_name == NULL) {
+        // デバイス名がない場合は安全のため検出しない
         return false;
     }
     
@@ -734,16 +735,47 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     }
     
     // レイヤー関連の動作を名前でチェック
-    // ZMKの一般的なbehavior名: "BEHAVIOR_X_Y" または "X_Y" の形式
-    // momentary_layer (mo), to_layer (to), toggle_layer (tog), 
-    // layer_tap (lt), mod_tap (mt), sticky_layer (sl) など
-    if (strstr(dev_name, "MOMENTARY") != NULL ||
-        strstr(dev_name, "LAYER") != NULL ||
-        strstr(dev_name, "TOGGLE") != NULL ||
-        strstr(dev_name, "MOD_TAP") != NULL ||
-        strstr(dev_name, "STICKY") != NULL) {
-        LOG_DBG("Detected layer/mod-tap behavior: %s", dev_name);
+    // ZMKの標準的なbehavior名のパターンをチェック
+    // より堅牢にするため、大文字小文字を区別せず、一般的なパターンをチェック
+    // 
+    // 一般的なZMK behavior名:
+    // - "mo" (momentary_layer)
+    // - "to" (to_layer) 
+    // - "tog" (toggle_layer)
+    // - "lt" (layer_tap)
+    // - "mt" (mod_tap)
+    // - "sl" (sticky_layer)
+    //
+    // デバイス名は通常 "BEHAVIOR_<name>" の形式
+    // 例: "BEHAVIOR_MOMENTARY_LAYER" や "mo" など
+    
+    size_t name_len = strlen(dev_name);
+    
+    // 完全一致または部分一致でチェック（短い名前の場合は完全一致のみ）
+    if (name_len == 2) {
+        // 2文字の場合は完全一致のみ（"mo", "to", "lt", "mt", "sl"）
+        if (strcmp(dev_name, "mo") == 0 ||
+            strcmp(dev_name, "to") == 0 ||
+            strcmp(dev_name, "lt") == 0 ||
+            strcmp(dev_name, "mt") == 0 ||
+            strcmp(dev_name, "sl") == 0) {
+            LOG_DBG("Detected layer/mod behavior (short name): %s", dev_name);
+            return true;
+        }
+    } else if (name_len == 3 && strcmp(dev_name, "tog") == 0) {
+        // 3文字: "tog"
+        LOG_DBG("Detected toggle layer behavior: %s", dev_name);
         return true;
+    } else {
+        // 長い名前の場合は部分一致で安全にチェック
+        if (strstr(dev_name, "MOMENTARY") != NULL ||
+            strstr(dev_name, "LAYER") != NULL ||
+            strstr(dev_name, "TOGGLE") != NULL ||
+            strstr(dev_name, "MOD_TAP") != NULL ||
+            strstr(dev_name, "STICKY") != NULL) {
+            LOG_DBG("Detected layer/mod-tap behavior (long name): %s", dev_name);
+            return true;
+        }
     }
     
     return false;
@@ -779,19 +811,19 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
             if (naginata_layer_active) {
                 naginata_layer_active = false;
                 
-                // 未確定の入力をクリア
-                while (nginput.size > 0) {
-                    removeFromListArrayAt(&nginput, 0);
-                }
+                // 未確定の入力をクリア（効率的に全削除）
+                nginput.size = 0;
                 pressed_keys = 0UL;
                 n_pressed_keys = 0;
                 
                 LOG_INF("Naginata layer deactivated (n_modifier=%d)", n_modifier);
             }
         } else { // released
-            n_modifier--;
-            if (n_modifier <= 0) {
-                n_modifier = 0;
+            // アンダーフローを防ぐ
+            if (n_modifier > 0) {
+                n_modifier--;
+            }
+            if (n_modifier == 0) {
                 if (!naginata_layer_active) {
                     naginata_layer_active = true;
                     LOG_INF("Naginata layer activated (n_modifier=%d)", n_modifier);
