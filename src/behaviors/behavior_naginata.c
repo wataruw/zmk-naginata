@@ -78,9 +78,11 @@ static bool naginata_layer_active = true; // 薙刀式レイヤーが有効か�
 static int8_t n_hid_modifiers = 0;   // HID修飾キー(0xE0-0xE7)の押下数
 static int8_t n_layer_hold_keys = 0; // レイヤーキー(&mo, &lt)のホールド押下数
 
-// 透過ビヘイビアのデバイス（走査時にスキップ）
+// 透過/レイヤーホールド系ビヘイビアのデバイス
 // Zephyr/ZMKのバージョン差異で behavior_dev の型が異なる場合があるため、void*で保持する
 static const void *trans_bhv_dev = NULL;
+static const void *mo_bhv_dev = NULL; // &mo (momentary layer)
+static const void *lt_bhv_dev = NULL; // &lt (layer tap)
 
 #define NG_WINDOWS 0
 #define NG_MACOS 1
@@ -691,15 +693,9 @@ ZMK_LISTENER(behavior_naginata_keycode, naginata_keycode_state_changed_listener)
 ZMK_SUBSCRIPTION(behavior_naginata_keycode, zmk_keycode_state_changed);
 
 // レイヤーキー（&mo, &lt）のホールド検出: position_state_changed を購読し、実効バインディングを走査
-static bool is_layer_hold_behavior_name(const char *name) {
-    if (!name) return false;
-    // 短いラベル
-    if (strcmp(name, "MO") == 0 || strcmp(name, "mo") == 0) return true;
-    if (strcmp(name, "LT") == 0 || strcmp(name, "lt") == 0) return true;
-    // 長い名前・カスタム
-    if (strstr(name, "momentary_layer") != NULL) return true;
-    if (strstr(name, "layer_tap") != NULL) return true;
-    return false;
+// レイヤーホールド判定はデバイスポインタ一致で行う
+static inline bool is_layer_hold_behavior_ptr(const void *dev_ptr) {
+    return dev_ptr && (dev_ptr == mo_bhv_dev || dev_ptr == lt_bhv_dev);
 }
 
 static const struct zmk_behavior_binding *
@@ -734,10 +730,22 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    // 透過ビヘイビアのデバイスを取得（初回だけ）
+    // 透過/レイヤーホールド系ビヘイビアのデバイスを取得（初回だけ）
     if (!trans_bhv_dev) {
         // 戻り値は実体としては struct device* だが、上で void* として保持
         trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
+    }
+    if (!mo_bhv_dev) {
+        mo_bhv_dev = (const void *)zmk_behavior_get_binding("MO");
+        if (!mo_bhv_dev) {
+            mo_bhv_dev = (const void *)zmk_behavior_get_binding("mo");
+        }
+    }
+    if (!lt_bhv_dev) {
+        lt_bhv_dev = (const void *)zmk_behavior_get_binding("LT");
+        if (!lt_bhv_dev) {
+            lt_bhv_dev = (const void *)zmk_behavior_get_binding("lt");
+        }
     }
 
     // 実効バインディングを取得
@@ -746,21 +754,18 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    // Zephyrでは device->name の直接参照は非推奨/不可のため API を使用
-    const char *dev_name = device_get_name((const struct device *)binding->behavior_dev);
-
-    // レイヤーホールド系（&mo, &lt）のみカウント
-    if (is_layer_hold_behavior_name(dev_name)) {
+    // レイヤーホールド系（&mo, &lt）のみカウント（デバイスポインタで判定）
+    if (is_layer_hold_behavior_ptr((const void *)binding->behavior_dev)) {
         if (ev->state) {
             n_layer_hold_keys++;
             naginata_deactivate_if_needed();
-            LOG_DBG("Layer hold press detected at pos %u: %s (count=%d)", ev->position, dev_name, n_layer_hold_keys);
+            LOG_DBG("Layer hold press detected at pos %u (count=%d)", ev->position, n_layer_hold_keys);
         } else {
             if (n_layer_hold_keys > 0) {
                 n_layer_hold_keys--;
             }
             naginata_try_activate();
-            LOG_DBG("Layer hold release detected at pos %u: %s (count=%d)", ev->position, dev_name, n_layer_hold_keys);
+            LOG_DBG("Layer hold release detected at pos %u (count=%d)", ev->position, n_layer_hold_keys);
         }
     }
 
@@ -785,6 +790,18 @@ static int behavior_naginata_init(const struct device *dev) {
 
     if (!trans_bhv_dev) {
         trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
+    }
+    if (!mo_bhv_dev) {
+        mo_bhv_dev = (const void *)zmk_behavior_get_binding("MO");
+        if (!mo_bhv_dev) {
+            mo_bhv_dev = (const void *)zmk_behavior_get_binding("mo");
+        }
+    }
+    if (!lt_bhv_dev) {
+        lt_bhv_dev = (const void *)zmk_behavior_get_binding("LT");
+        if (!lt_bhv_dev) {
+            lt_bhv_dev = (const void *)zmk_behavior_get_binding("lt");
+        }
     }
 
     naginata_config.os =  NG_MACOS;
