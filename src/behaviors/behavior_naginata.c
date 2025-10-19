@@ -79,7 +79,8 @@ static int8_t n_hid_modifiers = 0;   // HID修飾キー(0xE0-0xE7)の押下数
 static int8_t n_layer_hold_keys = 0; // レイヤーキー(&mo, &lt)のホールド押下数
 
 // 透過ビヘイビアのデバイス（走査時にスキップ）
-static const struct device *trans_bhv_dev = NULL;
+// Zephyr/ZMKのバージョン差異で behavior_dev の型が異なる場合があるため、void*で保持する
+static const void *trans_bhv_dev = NULL;
 
 #define NG_WINDOWS 0
 #define NG_MACOS 1
@@ -717,7 +718,8 @@ get_effective_binding_for_position(uint32_t position) {
         if (!binding || !binding->behavior_dev) {
             continue;
         }
-        if (trans_bhv_dev && binding->behavior_dev == trans_bhv_dev) {
+        // 型の不一致警告を避けるために void* にキャストして比較
+        if (trans_bhv_dev && (const void *)binding->behavior_dev == trans_bhv_dev) {
             // 透過はスキップ
             continue;
         }
@@ -734,7 +736,8 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
 
     // 透過ビヘイビアのデバイスを取得（初回だけ）
     if (!trans_bhv_dev) {
-        trans_bhv_dev = zmk_behavior_get_binding("TRANS");
+        // 戻り値は実体としては struct device* だが、上で void* として保持
+        trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
     }
 
     // 実効バインディングを取得
@@ -743,7 +746,8 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    const char *dev_name = binding->behavior_dev->name;
+    // Zephyrでは device->name の直接参照は非推奨/不可のため API を使用
+    const char *dev_name = device_get_name((const struct device *)binding->behavior_dev);
 
     // レイヤーホールド系（&mo, &lt）のみカウント
     if (is_layer_hold_behavior_name(dev_name)) {
@@ -780,7 +784,7 @@ static int behavior_naginata_init(const struct device *dev) {
     n_layer_hold_keys = 0;
 
     if (!trans_bhv_dev) {
-        trans_bhv_dev = zmk_behavior_get_binding("TRANS");
+        trans_bhv_dev = (const void *)zmk_behavior_get_binding("TRANS");
     }
 
     naginata_config.os =  NG_MACOS;
