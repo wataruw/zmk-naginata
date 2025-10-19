@@ -1,7 +1,25 @@
 # Implementation Notes: Modifier and Layer Key Support
 
+## ⚠️ IMPORTANT: Feature Removed (2025-10-19)
+
+**The modifier and layer key detection feature described in this document has been removed** due to the use of a non-existent ZMK API function (`zmk_keymap_position_binding`).
+
+See [LINKER_ERROR_FIX.md](LINKER_ERROR_FIX.md) for details on:
+- Why the feature was removed
+- Impact on functionality
+- Alternative approaches
+- Recommendations for users
+
+**Current Status**: The naginata behavior remains active at all times and does not automatically disable when modifier or layer keys are pressed.
+
+---
+
+## Historical Documentation
+
+The following documentation describes the **previous implementation** that has been removed.
+
 ## Overview
-This document describes the implementation of modifier and layer key support for the ZMK naginata behavior, which allows users to temporarily disable naginata input processing when switching layers or using modifier keys.
+This document describes the previous implementation of modifier and layer key support for the ZMK naginata behavior, which attempted to temporarily disable naginata input processing when switching layers or using modifier keys.
 
 ## Background
 
