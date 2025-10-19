@@ -72,6 +72,7 @@ static uint32_t pressed_keys = 0UL; // 押しているキーのビットをた�
 static int8_t n_pressed_keys = 0;   // 押しているキーの数
 static int8_t n_modifier = 0;       // 押しているモディファイキー・レイヤーキーの数
 static bool naginata_layer_active = true; // 薙刀式レイヤーが有効かどうか
+static const struct device *naginata_behavior_dev = NULL; // naginata behaviorのデバイスへの参照を保持
 
 #define NG_WINDOWS 0
 #define NG_MACOS 1
@@ -697,9 +698,6 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
 
 static const struct behavior_driver_api behavior_naginata_driver_api = {
     .binding_pressed = on_keymap_binding_pressed, .binding_released = on_keymap_binding_released};
-
-// naginata behaviorのデバイスへの参照を保持
-static const struct device *naginata_behavior_dev = NULL;
 
 // モディファイキーとレイヤーキーを検出する関数
 static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding) {
