@@ -720,7 +720,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     
     const char *dev_name = dev->name;
     if (dev_name == NULL) {
-        // デバイス名がない場合は安全のため検出しない
+        // デバイス名がない場合は検出しない
         return false;
     }
     
@@ -735,8 +735,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     }
     
     // レイヤー関連の動作を名前でチェック
-    // ZMKの標準的なbehavior名のパターンをチェック
-    // より堅牢にするため、大文字小文字を区別せず、一般的なパターンをチェック
+    // ZMKの標準的なbehavior名のパターンをチェック（大文字小文字を区別）
     // 
     // 一般的なZMK behavior名:
     // - "mo" (momentary_layer)
@@ -751,7 +750,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     
     size_t name_len = strlen(dev_name);
     
-    // 完全一致または部分一致でチェック（短い名前の場合は完全一致のみ）
+    // 短い名前の場合は完全一致でチェック
     if (name_len == 2) {
         // 2文字の場合は完全一致のみ（"mo", "to", "lt", "mt", "sl"）
         if (strcmp(dev_name, "mo") == 0 ||
@@ -767,12 +766,22 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
         LOG_DBG("Detected toggle layer behavior: %s", dev_name);
         return true;
     } else {
-        // 長い名前の場合は部分一致で安全にチェック
-        if (strstr(dev_name, "MOMENTARY") != NULL ||
-            strstr(dev_name, "LAYER") != NULL ||
-            strstr(dev_name, "TOGGLE") != NULL ||
-            strstr(dev_name, "MOD_TAP") != NULL ||
-            strstr(dev_name, "STICKY") != NULL) {
+        // 長い名前の場合はZMKの標準的な名前パターンをチェック
+        // "BEHAVIOR_"プレフィックスを考慮した完全なbehavior名でチェック
+        // 誤検出を防ぐため、より具体的なパターンを使用
+        if (strcmp(dev_name, "BEHAVIOR_MOMENTARY_LAYER") == 0 ||
+            strcmp(dev_name, "BEHAVIOR_TO_LAYER") == 0 ||
+            strcmp(dev_name, "BEHAVIOR_TOGGLE_LAYER") == 0 ||
+            strcmp(dev_name, "BEHAVIOR_LAYER_TAP") == 0 ||
+            strcmp(dev_name, "BEHAVIOR_MOD_TAP") == 0 ||
+            strcmp(dev_name, "BEHAVIOR_STICKY_LAYER") == 0 ||
+            // 大文字・小文字が違う可能性を考慮
+            strstr(dev_name, "momentary_layer") != NULL ||
+            strstr(dev_name, "to_layer") != NULL ||
+            strstr(dev_name, "toggle_layer") != NULL ||
+            strstr(dev_name, "layer_tap") != NULL ||
+            strstr(dev_name, "mod_tap") != NULL ||
+            strstr(dev_name, "sticky_layer") != NULL) {
             LOG_DBG("Detected layer/mod-tap behavior (long name): %s", dev_name);
             return true;
         }
