@@ -9,10 +9,13 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+#include <string.h>
 
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/events/position_state_changed.h>
 #include <zmk/behavior.h>
+#include <zmk/keymap.h>
 
 #include <zmk_naginata/nglist.h>
 #include <zmk_naginata/nglistarray.h>
@@ -67,6 +70,8 @@ extern int64_t timestamp;
 static NGListArray nginput;
 static uint32_t pressed_keys = 0UL; // 押しているキーのビットをたてる
 static int8_t n_pressed_keys = 0;   // 押しているキーの数
+static int8_t n_modifier = 0;       // 押しているモディファイキー・レイヤーキーの数
+static bool naginata_layer_active = true; // 薙刀式レイヤーが有効かどうか
 
 #define NG_WINDOWS 0
 #define NG_MACOS 1
@@ -494,6 +499,12 @@ void ng_type(NGList *keys) {
 bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_binding_event event) {
     LOG_DBG(">NAGINATA PRESS");
 
+    // モディファイキーが押されている場合は薙刀式を無効化
+    if (!naginata_layer_active) {
+        LOG_DBG("<NAGINATA PRESS (inactive)");
+        return true;
+    }
+
     uint32_t keycode = binding->param1;
 
     switch (keycode) {
@@ -586,6 +597,12 @@ bool naginata_release(struct zmk_behavior_binding *binding,
                       struct zmk_behavior_binding_event event) {
     LOG_DBG(">NAGINATA RELEASE");
 
+    // モディファイキーが押されている場合は薙刀式を無効化
+    if (!naginata_layer_active) {
+        LOG_DBG("<NAGINATA RELEASE (inactive)");
+        return true;
+    }
+
     uint32_t keycode = binding->param1;
 
     switch (keycode) {
@@ -627,9 +644,13 @@ bool naginata_release(struct zmk_behavior_binding *binding,
 static int behavior_naginata_init(const struct device *dev) {
     LOG_DBG("NAGINATA INIT");
 
+    naginata_behavior_dev = dev; // naginata behaviorのデバイス参照を保存
+    
     initializeListArray(&nginput);
     pressed_keys = 0UL;
     n_pressed_keys = 0;
+    n_modifier = 0;
+    naginata_layer_active = true;
     naginata_config.os =  NG_MACOS;
 
     return 0;
@@ -676,6 +697,153 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
 
 static const struct behavior_driver_api behavior_naginata_driver_api = {
     .binding_pressed = on_keymap_binding_pressed, .binding_released = on_keymap_binding_released};
+
+// naginata behaviorのデバイスへの参照を保持
+static const struct device *naginata_behavior_dev = NULL;
+
+// モディファイキーとレイヤーキーを検出する関数
+static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding) {
+    if (binding == NULL) {
+        return false;
+    }
+    
+    // behavior_dev は device 構造体へのポインタ
+    const struct device *dev = binding->behavior_dev;
+    if (dev == NULL) {
+        return false;
+    }
+    
+    // naginata behavior自体は除外
+    if (naginata_behavior_dev != NULL && dev == naginata_behavior_dev) {
+        return false;
+    }
+    
+    const char *dev_name = dev->name;
+    if (dev_name == NULL) {
+        // デバイス名がない場合は不明なbehaviorとして検出を避ける
+        return false;
+    }
+    
+    // モディファイキー (kp with modifier keycodes)
+    // HID usage page 0x07 (Keyboard), modifier keycodes are 0xE0-0xE7
+    uint32_t keycode = binding->param1;
+    
+    // Left Control (0xE0) to Right GUI (0xE7)
+    if (keycode >= 0xE0 && keycode <= 0xE7) {
+        LOG_DBG("Detected modifier keycode: 0x%02X", keycode);
+        return true;
+    }
+    
+    // レイヤー関連の動作を名前でチェック
+    // ZMKの標準的なbehavior名のパターンをチェック
+    // 
+    // 一般的なZMK behavior名:
+    // - "mo" (momentary_layer)
+    // - "to" (to_layer) 
+    // - "tog" (toggle_layer)
+    // - "lt" (layer_tap)
+    // - "mt" (mod_tap)
+    // - "sl" (sticky_layer)
+    //
+    // デバイス名は "BEHAVIOR_<name>" または短縮名 (例: "mo")
+    
+    size_t name_len = strlen(dev_name);
+    
+    // 短縮名の完全一致チェック（誤検出を防ぐ）
+    if (name_len <= 3) {
+        if (strcmp(dev_name, "mo") == 0 ||
+            strcmp(dev_name, "to") == 0 ||
+            strcmp(dev_name, "lt") == 0 ||
+            strcmp(dev_name, "mt") == 0 ||
+            strcmp(dev_name, "sl") == 0 ||
+            strcmp(dev_name, "tog") == 0) {
+            LOG_DBG("Detected layer/mod behavior: %s", dev_name);
+            return true;
+        }
+    }
+    
+    // 長い名前の完全一致チェック（ZMKの標準behavior名）
+    if (strcmp(dev_name, "BEHAVIOR_MOMENTARY_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_TO_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_TOGGLE_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_LAYER_TAP") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_MOD_TAP") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_STICKY_LAYER") == 0) {
+        LOG_DBG("Detected layer/mod behavior: %s", dev_name);
+        return true;
+    }
+    
+    // 小文字形式の部分一致チェック（カスタムbehavior対応）
+    // 例: "custom_momentary_layer" などにも対応
+    if (strstr(dev_name, "momentary_layer") != NULL ||
+        strstr(dev_name, "to_layer") != NULL ||
+        strstr(dev_name, "toggle_layer") != NULL ||
+        strstr(dev_name, "layer_tap") != NULL ||
+        strstr(dev_name, "mod_tap") != NULL ||
+        strstr(dev_name, "sticky_layer") != NULL) {
+        LOG_DBG("Detected layer/mod behavior (substring): %s", dev_name);
+        return true;
+    }
+    
+    return false;
+}
+
+// position_state_changed イベントのリスナー
+static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
+    struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    if (ev == NULL) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    // キーマップから対応するバインディングを取得
+    struct zmk_behavior_binding binding;
+    int ret = zmk_keymap_position_binding(ev->position, &binding);
+    if (ret < 0) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    // デバッグ: 全てのキーイベントをログ出力
+    if (binding.behavior_dev != NULL) {
+        const struct device *dev = binding.behavior_dev;
+        LOG_DBG("Position %d, state %d, behavior: %s, param1: 0x%02X", 
+                ev->position, ev->state, 
+                dev->name ? dev->name : "null", 
+                binding.param1);
+    }
+
+    // モディファイキーまたはレイヤーキーかどうかをチェック
+    if (is_modifier_or_layer_key(&binding)) {
+        if (ev->state) { // pressed
+            n_modifier++;
+            if (naginata_layer_active) {
+                naginata_layer_active = false;
+                
+                // 未確定の入力をクリア（効率的に全削除）
+                nginput.size = 0;
+                pressed_keys = 0UL;
+                n_pressed_keys = 0;
+                
+                LOG_INF("Naginata layer deactivated (n_modifier=%d)", n_modifier);
+            }
+        } else { // released
+            // アンダーフローを防ぐ
+            if (n_modifier > 0) {
+                n_modifier--;
+            }
+            if (n_modifier == 0) {
+                if (!naginata_layer_active) {
+                    naginata_layer_active = true;
+                    LOG_INF("Naginata layer activated (n_modifier=%d)", n_modifier);
+                }
+            }
+        }
+    }
+
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+ZMK_LISTENER(behavior_naginata_global, naginata_position_state_changed_listener);
+ZMK_SUBSCRIPTION(behavior_naginata_global, zmk_position_state_changed);
 
 #define KP_INST(n)                                                                                 \
     BEHAVIOR_DT_INST_DEFINE(n, behavior_naginata_init, NULL, NULL, NULL, POST_KERNEL,              \
