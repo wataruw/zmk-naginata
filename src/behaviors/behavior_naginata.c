@@ -720,7 +720,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     
     const char *dev_name = dev->name;
     if (dev_name == NULL) {
-        // デバイス名がない場合は検出しない
+        // デバイス名がない場合は不明なbehaviorとして検出を避ける
         return false;
     }
     
@@ -735,7 +735,7 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     }
     
     // レイヤー関連の動作を名前でチェック
-    // ZMKの標準的なbehavior名のパターンをチェック（大文字小文字を区別）
+    // ZMKの標準的なbehavior名のパターンをチェック
     // 
     // 一般的なZMK behavior名:
     // - "mo" (momentary_layer)
@@ -745,46 +745,44 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     // - "mt" (mod_tap)
     // - "sl" (sticky_layer)
     //
-    // デバイス名は通常 "BEHAVIOR_<name>" の形式
-    // 例: "BEHAVIOR_MOMENTARY_LAYER" や "mo" など
+    // デバイス名は "BEHAVIOR_<name>" または短縮名 (例: "mo")
     
     size_t name_len = strlen(dev_name);
     
-    // 短い名前の場合は完全一致でチェック
-    if (name_len == 2) {
-        // 2文字の場合は完全一致のみ（"mo", "to", "lt", "mt", "sl"）
+    // 短縮名の完全一致チェック（誤検出を防ぐ）
+    if (name_len <= 3) {
         if (strcmp(dev_name, "mo") == 0 ||
             strcmp(dev_name, "to") == 0 ||
             strcmp(dev_name, "lt") == 0 ||
             strcmp(dev_name, "mt") == 0 ||
-            strcmp(dev_name, "sl") == 0) {
-            LOG_DBG("Detected layer/mod behavior (short name): %s", dev_name);
+            strcmp(dev_name, "sl") == 0 ||
+            strcmp(dev_name, "tog") == 0) {
+            LOG_DBG("Detected layer/mod behavior: %s", dev_name);
             return true;
         }
-    } else if (name_len == 3 && strcmp(dev_name, "tog") == 0) {
-        // 3文字: "tog"
-        LOG_DBG("Detected toggle layer behavior: %s", dev_name);
+    }
+    
+    // 長い名前の完全一致チェック（ZMKの標準behavior名）
+    if (strcmp(dev_name, "BEHAVIOR_MOMENTARY_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_TO_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_TOGGLE_LAYER") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_LAYER_TAP") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_MOD_TAP") == 0 ||
+        strcmp(dev_name, "BEHAVIOR_STICKY_LAYER") == 0) {
+        LOG_DBG("Detected layer/mod behavior: %s", dev_name);
         return true;
-    } else {
-        // 長い名前の場合はZMKの標準的な名前パターンをチェック
-        // "BEHAVIOR_"プレフィックスを考慮した完全なbehavior名でチェック
-        // 誤検出を防ぐため、より具体的なパターンを使用
-        if (strcmp(dev_name, "BEHAVIOR_MOMENTARY_LAYER") == 0 ||
-            strcmp(dev_name, "BEHAVIOR_TO_LAYER") == 0 ||
-            strcmp(dev_name, "BEHAVIOR_TOGGLE_LAYER") == 0 ||
-            strcmp(dev_name, "BEHAVIOR_LAYER_TAP") == 0 ||
-            strcmp(dev_name, "BEHAVIOR_MOD_TAP") == 0 ||
-            strcmp(dev_name, "BEHAVIOR_STICKY_LAYER") == 0 ||
-            // 大文字・小文字が違う可能性を考慮
-            strstr(dev_name, "momentary_layer") != NULL ||
-            strstr(dev_name, "to_layer") != NULL ||
-            strstr(dev_name, "toggle_layer") != NULL ||
-            strstr(dev_name, "layer_tap") != NULL ||
-            strstr(dev_name, "mod_tap") != NULL ||
-            strstr(dev_name, "sticky_layer") != NULL) {
-            LOG_DBG("Detected layer/mod-tap behavior (long name): %s", dev_name);
-            return true;
-        }
+    }
+    
+    // 小文字形式の部分一致チェック（カスタムbehavior対応）
+    // 例: "custom_momentary_layer" などにも対応
+    if (strstr(dev_name, "momentary_layer") != NULL ||
+        strstr(dev_name, "to_layer") != NULL ||
+        strstr(dev_name, "toggle_layer") != NULL ||
+        strstr(dev_name, "layer_tap") != NULL ||
+        strstr(dev_name, "mod_tap") != NULL ||
+        strstr(dev_name, "sticky_layer") != NULL) {
+        LOG_DBG("Detected layer/mod behavior (substring): %s", dev_name);
+        return true;
     }
     
     return false;
