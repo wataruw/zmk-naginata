@@ -644,6 +644,8 @@ bool naginata_release(struct zmk_behavior_binding *binding,
 static int behavior_naginata_init(const struct device *dev) {
     LOG_DBG("NAGINATA INIT");
 
+    naginata_behavior_dev = dev; // naginata behaviorのデバイス参照を保存
+    
     initializeListArray(&nginput);
     pressed_keys = 0UL;
     n_pressed_keys = 0;
@@ -696,6 +698,9 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
 static const struct behavior_driver_api behavior_naginata_driver_api = {
     .binding_pressed = on_keymap_binding_pressed, .binding_released = on_keymap_binding_released};
 
+// naginata behaviorのデバイスへの参照を保持
+static const struct device *naginata_behavior_dev = NULL;
+
 // モディファイキーとレイヤーキーを検出する関数
 static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding) {
     if (binding == NULL) {
@@ -704,7 +709,12 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     
     // behavior_dev は device 構造体へのポインタ
     const struct device *dev = binding->behavior_dev;
-    if (dev == NULL || !device_is_ready(dev)) {
+    if (dev == NULL) {
+        return false;
+    }
+    
+    // naginata behavior自体は除外
+    if (naginata_behavior_dev != NULL && dev == naginata_behavior_dev) {
         return false;
     }
     
@@ -724,12 +734,14 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     }
     
     // レイヤー関連の動作を名前でチェック
-    // &mo (momentary layer), &to (to layer), &tog (toggle layer), &lt (layer tap), &mt (mod-tap)
-    if (strstr(dev_name, "MOMENTARY_LAYER") != NULL ||
-        strstr(dev_name, "TO_LAYER") != NULL ||
-        strstr(dev_name, "TOGGLE_LAYER") != NULL ||
-        strstr(dev_name, "LAYER_TAP") != NULL ||
-        strstr(dev_name, "MOD_TAP") != NULL) {
+    // ZMKの一般的なbehavior名をチェック
+    // "BEHAVIOR_"プレフィックスを除いた名前でチェック
+    if (strstr(dev_name, "mo") != NULL ||
+        strstr(dev_name, "to") != NULL ||
+        strstr(dev_name, "tog") != NULL ||
+        strstr(dev_name, "lt") != NULL ||
+        strstr(dev_name, "mt") != NULL ||
+        strstr(dev_name, "sl") != NULL) { // sticky layer
         LOG_DBG("Detected layer/mod-tap behavior: %s", dev_name);
         return true;
     }
@@ -751,13 +763,22 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
+    // デバッグ: 全てのキーイベントをログ出力
+    if (binding.behavior_dev != NULL) {
+        const struct device *dev = binding.behavior_dev;
+        LOG_DBG("Position %d, state %d, behavior: %s, param1: 0x%02X", 
+                ev->position, ev->state, 
+                dev->name ? dev->name : "null", 
+                binding.param1);
+    }
+
     // モディファイキーまたはレイヤーキーかどうかをチェック
     if (is_modifier_or_layer_key(&binding)) {
         if (ev->state) { // pressed
             n_modifier++;
             if (naginata_layer_active) {
                 naginata_layer_active = false;
-                LOG_DBG("Naginata layer deactivated (n_modifier=%d)", n_modifier);
+                LOG_INF("Naginata layer deactivated (n_modifier=%d)", n_modifier);
             }
         } else { // released
             n_modifier--;
@@ -765,7 +786,7 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
                 n_modifier = 0;
                 if (!naginata_layer_active) {
                     naginata_layer_active = true;
-                    LOG_DBG("Naginata layer activated (n_modifier=%d)", n_modifier);
+                    LOG_INF("Naginata layer activated (n_modifier=%d)", n_modifier);
                 }
             }
         }
