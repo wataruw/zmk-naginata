@@ -734,14 +734,14 @@ static bool is_modifier_or_layer_key(const struct zmk_behavior_binding *binding)
     }
     
     // レイヤー関連の動作を名前でチェック
-    // ZMKの一般的なbehavior名をチェック
-    // "BEHAVIOR_"プレフィックスを除いた名前でチェック
-    if (strstr(dev_name, "mo") != NULL ||
-        strstr(dev_name, "to") != NULL ||
-        strstr(dev_name, "tog") != NULL ||
-        strstr(dev_name, "lt") != NULL ||
-        strstr(dev_name, "mt") != NULL ||
-        strstr(dev_name, "sl") != NULL) { // sticky layer
+    // ZMKの一般的なbehavior名: "BEHAVIOR_X_Y" または "X_Y" の形式
+    // momentary_layer (mo), to_layer (to), toggle_layer (tog), 
+    // layer_tap (lt), mod_tap (mt), sticky_layer (sl) など
+    if (strstr(dev_name, "MOMENTARY") != NULL ||
+        strstr(dev_name, "LAYER") != NULL ||
+        strstr(dev_name, "TOGGLE") != NULL ||
+        strstr(dev_name, "MOD_TAP") != NULL ||
+        strstr(dev_name, "STICKY") != NULL) {
         LOG_DBG("Detected layer/mod-tap behavior: %s", dev_name);
         return true;
     }
@@ -778,6 +778,14 @@ static int naginata_position_state_changed_listener(const zmk_event_t *eh) {
             n_modifier++;
             if (naginata_layer_active) {
                 naginata_layer_active = false;
+                
+                // 未確定の入力をクリア
+                while (nginput.size > 0) {
+                    removeFromListArrayAt(&nginput, 0);
+                }
+                pressed_keys = 0UL;
+                n_pressed_keys = 0;
+                
                 LOG_INF("Naginata layer deactivated (n_modifier=%d)", n_modifier);
             }
         } else { // released
