@@ -271,15 +271,15 @@ void ngh_JKD() { // ？{改行}
 }
 
 void ngh_JKF() { // 「{改行}
-    raise_zmk_keycode_state_changed_from_encoded(LBKT, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LBKT, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(RBKT, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(RBKT, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_JKG() { // ({改行}
-    raise_zmk_keycode_state_changed_from_encoded(LPAR, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LPAR, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LS(N8), true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LS(N8), false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
@@ -312,15 +312,15 @@ void ngh_JKC() { // ！{改行}
 }
 
 void ngh_JKV() { // 」{改行}
-    raise_zmk_keycode_state_changed_from_encoded(RBKT, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(RBKT, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(NUHS, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(NUHS, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_JKB() { // ){改行}
-    raise_zmk_keycode_state_changed_from_encoded(RPAR, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(RPAR, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LS(N9), true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LS(N9), false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
@@ -841,6 +841,9 @@ void ng_undo() {
 void ng_saihenkan() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
+        raise_zmk_keycode_state_changed_from_encoded(LG(SLASH), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(SLASH), false, timestamp);
+        break;
     case NG_LINUX:
         raise_zmk_keycode_state_changed_from_encoded(INT4, true, timestamp);
         raise_zmk_keycode_state_changed_from_encoded(INT4, false, timestamp);
