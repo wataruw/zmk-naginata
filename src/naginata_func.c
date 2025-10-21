@@ -842,9 +842,8 @@ void ng_saihenkan() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
         raise_zmk_keycode_state_changed_from_encoded(LGUI, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(SLASH, true, timestamp);
-        k_sleep(K_MSEC(300));
-        raise_zmk_keycode_state_changed_from_encoded(SLASH, false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(FSLH, true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(FSLH, false, timestamp);
         raise_zmk_keycode_state_changed_from_encoded(LGUI, false, timestamp);
         break;
     case NG_LINUX:
