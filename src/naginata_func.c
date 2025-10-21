@@ -841,8 +841,11 @@ void ng_undo() {
 void ng_saihenkan() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(SLASH), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(SLASH), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LGUI, true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(SLASH, true, timestamp);
+        k_sleep(K_MSEC(300));
+        raise_zmk_keycode_state_changed_from_encoded(SLASH, false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LGUI, false, timestamp);
         break;
     case NG_LINUX:
         raise_zmk_keycode_state_changed_from_encoded(INT4, true, timestamp);
