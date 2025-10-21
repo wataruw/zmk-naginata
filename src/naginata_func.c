@@ -843,8 +843,8 @@ void ng_saihenkan() {
     case NG_WINDOWS:
         raise_zmk_keycode_state_changed_from_encoded(LGUI, true, timestamp);
         raise_zmk_keycode_state_changed_from_encoded(FSLH, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(FSLH, false, timestamp);
         raise_zmk_keycode_state_changed_from_encoded(LGUI, false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(FSLH, false, timestamp);
         break;
     case NG_LINUX:
         raise_zmk_keycode_state_changed_from_encoded(INT4, true, timestamp);
