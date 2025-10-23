@@ -116,6 +116,8 @@ static inline bool is_ng_handled_keycode(uint32_t kc) {
     case COMMA:
     case SLASH:
     case SEMI:
+    case HOME:
+    case END:
         return true;
     default:
         return false;
@@ -870,6 +872,18 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 
     timestamp = event.timestamp;
 
+    // Special handling: map HOME/END to OS-specific actions via ng_* helpers
+    // This allows using `&ng HOME` / `&ng END` in any layer (e.g., Layer 1) to
+    // produce Ctrl+A / Ctrl+E on macOS and Home/End on Windows/Linux.
+    if (binding->param1 == HOME) {
+        ng_home();
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+    if (binding->param1 == END) {
+        ng_end();
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+
     // &ng が扱わないキー（モディファイ、&mo など）は常に透過
     if (!is_ng_handled_keycode(binding->param1)) {
         return ZMK_BEHAVIOR_TRANSPARENT;
@@ -890,6 +904,11 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     timestamp = event.timestamp;
+
+    // Swallow releases for HOME/END when bound through &ng
+    if (binding->param1 == HOME || binding->param1 == END) {
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
     // &ng が扱わないキー（モディファイ、&mo など）は常に透過
     if (!is_ng_handled_keycode(binding->param1)) {
         return ZMK_BEHAVIOR_TRANSPARENT;
