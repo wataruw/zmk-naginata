@@ -872,8 +872,8 @@ void ng_ctrl_bracket_left() {
         raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), false, timestamp);
         break;
     }
 }
@@ -886,8 +886,8 @@ void ng_ctrl_bracket_right() {
         raise_zmk_keycode_state_changed_from_encoded(LC(NUHS), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(NUHS), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(NUHS), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(NUHS), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(NUHS), false, timestamp);
         break;
     }
 }
@@ -928,8 +928,8 @@ void ng_ctrl_shift_bracket_left() {
         raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RBKT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RBKT)), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), false, timestamp);
         break;
     }
 }
@@ -942,8 +942,8 @@ void ng_ctrl_shift_bracket_right() {
         raise_zmk_keycode_state_changed_from_encoded(LC(LS(NUHS)), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(NUHS)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(NUHS)), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(NUHS)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(NUHS)), false, timestamp);
         break;
     }
 }
