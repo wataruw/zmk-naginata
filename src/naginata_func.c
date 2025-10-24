@@ -868,12 +868,12 @@ void ng_ctrl_bracket_left() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LBKT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LBKT), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LBKT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LBKT), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), false, timestamp);
         break;
     }
 }
@@ -924,12 +924,12 @@ void ng_ctrl_shift_bracket_left() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(LBKT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(LBKT)), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), false, timestamp);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(LBKT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(LBKT)), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RBKT)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RBKT)), false, timestamp);
         break;
     }
 }
