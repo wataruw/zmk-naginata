@@ -596,7 +596,7 @@ void ng_type(NGList *keys) {
     // }
     // addToList(&b, keys->elements[keys->size - 1]);
     // ng_type(&a);
-    ng_type(&b);
+    // ng_type(&b);
 
     LOG_DBG("<NAGINATA NG_TYPE");
 }
