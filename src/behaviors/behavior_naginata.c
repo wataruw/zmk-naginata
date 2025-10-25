@@ -106,6 +106,37 @@ typedef union {
 
 extern user_config_t naginata_config;
 
+// --- Press/Release 対応のための状態管理 --------------------------------------
+// &ng が押下時に TRANSPARENT を返したキー位置を記録しておき、
+// そのキーのリリース時も必ず TRANSPARENT を返すようにする。
+// これにより、モディファイ押下などで途中で有効/無効が切り替わっても
+// 押下と解放の処理主体が食い違わず、「押しっぱなし」にならない。
+
+#ifndef NG_MAX_POSITIONS
+#define NG_MAX_POSITIONS 256
+#endif
+
+static uint32_t ng_transparent_pressed_bitmap[(NG_MAX_POSITIONS + 31) / 32];
+
+static inline void ng_mark_transparent_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        ng_transparent_pressed_bitmap[position / 32] |= (1u << (position % 32));
+    }
+}
+
+static inline void ng_clear_transparent_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        ng_transparent_pressed_bitmap[position / 32] &= ~(1u << (position % 32));
+    }
+}
+
+static inline bool ng_was_transparent_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        return (ng_transparent_pressed_bitmap[position / 32] & (1u << (position % 32))) != 0;
+    }
+    return false;
+}
+
 // &ng が処理対象とするキーかどうか（アルファ/句読点/スペース/エンター）
 static inline bool is_ng_handled_keycode(uint32_t kc) {
     switch (kc) {
@@ -635,12 +666,6 @@ bool naginata_release(struct zmk_behavior_binding *binding,
                       struct zmk_behavior_binding_event event) {
     LOG_DBG(">NAGINATA RELEASE");
 
-    // モディファイ/レイヤーホールド中は無効化
-    if (!naginata_layer_active) {
-        LOG_DBG("<NAGINATA RELEASE (inactive)");
-        return true;
-    }
-
     uint32_t keycode = binding->param1;
 
     switch (keycode) {
@@ -844,6 +869,11 @@ static int behavior_naginata_init(const struct device *dev) {
 
     naginata_config.os =  NG_MACOS;
 
+    // 透明押下記録をクリア
+    for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
+        ng_transparent_pressed_bitmap[i] = 0u;
+    }
+
     return 0;
 };
 
@@ -884,18 +914,20 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
         return ZMK_BEHAVIOR_OPAQUE;
     }
 
-    // &ng が扱わないキー（モディファイ、&mo など）は常に透過
-    if (!is_ng_handled_keycode(binding->param1)) {
+    bool handled_key = is_ng_handled_keycode(binding->param1);
+    bool use_ng = handled_key && naginata_layer_active;
+
+    if (!use_ng) {
+        // 押下は透過として扱う -> リリースも透過に揃えるため記録
+        if (handled_key) {
+            ng_mark_transparent_press(event.position);
+        }
         return ZMK_BEHAVIOR_TRANSPARENT;
     }
 
-    // Naginata 非アクティブ時は透過させ、下位レイヤー/他ビヘイビアに処理を委ねる
-    if (!naginata_layer_active) {
-        return ZMK_BEHAVIOR_TRANSPARENT;
-    }
-
+    // &ng で処理する場合は記録をクリア（万一残っていてもミスマッチしないように）
+    ng_clear_transparent_press(event.position);
     naginata_press(binding, event);
-
     return ZMK_BEHAVIOR_OPAQUE;
 }
 
@@ -913,14 +945,15 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
     if (!is_ng_handled_keycode(binding->param1)) {
         return ZMK_BEHAVIOR_TRANSPARENT;
     }
-    
-    // Naginata 非アクティブ時は透過させ、下位レイヤー/他ビヘイビアに処理を委ねる
-    if (!naginata_layer_active) {
+
+    // 押下時に透過として扱ったキーは、リリースも透過へルーティング
+    if (ng_was_transparent_press(event.position)) {
+        ng_clear_transparent_press(event.position);
         return ZMK_BEHAVIOR_TRANSPARENT;
     }
 
+    // 押下を &ng で処理したキーは、現在が非アクティブでも必ず &ng で解放処理
     naginata_release(binding, event);
-
     return ZMK_BEHAVIOR_OPAQUE;
 }
 
