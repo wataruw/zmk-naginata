@@ -113,26 +113,63 @@ extern user_config_t naginata_config;
 // 押下と解放の処理主体が食い違わず、「押しっぱなし」にならない。
 
 #ifndef NG_MAX_POSITIONS
-#define NG_MAX_POSITIONS 256
+// 取りこぼし防止のため拡大（以前: 256）
+#define NG_MAX_POSITIONS 512
 #endif
 
 static uint32_t ng_transparent_pressed_bitmap[(NG_MAX_POSITIONS + 31) / 32];
+// 透過として押されているポジション数（再有効化の抑止に使用）
+static int ng_transparent_pressed_count = 0;
+
+// 合成タップ（モディファイ押下中に即押下→即解放したキー）の押下記録
+static uint32_t ng_chord_tap_pressed_bitmap[(NG_MAX_POSITIONS + 31) / 32];
 
 static inline void ng_mark_transparent_press(uint16_t position) {
     if (position < NG_MAX_POSITIONS) {
-        ng_transparent_pressed_bitmap[position / 32] |= (1u << (position % 32));
+        uint32_t mask = (1u << (position % 32));
+        uint32_t *slot = &ng_transparent_pressed_bitmap[position / 32];
+        if ((*slot & mask) == 0) {
+            // 新規にセットされるときだけカウントアップ
+            ng_transparent_pressed_count++;
+            *slot |= mask;
+        }
     }
 }
 
 static inline void ng_clear_transparent_press(uint16_t position) {
     if (position < NG_MAX_POSITIONS) {
-        ng_transparent_pressed_bitmap[position / 32] &= ~(1u << (position % 32));
+        uint32_t mask = (1u << (position % 32));
+        uint32_t *slot = &ng_transparent_pressed_bitmap[position / 32];
+        if ((*slot & mask) != 0) {
+            // 実際にクリアされるときだけカウントダウン
+            ng_transparent_pressed_count--;
+            *slot &= ~mask;
+        }
     }
 }
 
 static inline bool ng_was_transparent_press(uint16_t position) {
     if (position < NG_MAX_POSITIONS) {
         return (ng_transparent_pressed_bitmap[position / 32] & (1u << (position % 32))) != 0;
+    }
+    return false;
+}
+
+static inline void ng_mark_chord_tap_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        ng_chord_tap_pressed_bitmap[position / 32] |= (1u << (position % 32));
+    }
+}
+
+static inline void ng_clear_chord_tap_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        ng_chord_tap_pressed_bitmap[position / 32] &= ~(1u << (position % 32));
+    }
+}
+
+static inline bool ng_was_chord_tap_press(uint16_t position) {
+    if (position < NG_MAX_POSITIONS) {
+        return (ng_chord_tap_pressed_bitmap[position / 32] & (1u << (position % 32))) != 0;
     }
     return false;
 }
@@ -545,21 +582,20 @@ void ng_type(NGList *keys) {
             } else {
                 ngdickana[i].func();
             }
-            LOG_DBG("<NAGINATA NG_TYPE");
             return;
         }
     }
 
     // JIみたいにJIを含む同時押しはたくさんあるが、JIのみの同時押しがないとき
     // 最後の１キーを別に分けて変換する
-    NGList a, b;
-    initializeList(&a);
-    initializeList(&b);
-    for (int i = 0; i < keys->size - 1; i++) {
-        addToList(&a, keys->elements[i]);
-    }
-    addToList(&b, keys->elements[keys->size - 1]);
-    ng_type(&a);
+    // NGList a, b;
+    // initializeList(&a);
+    // initializeList(&b);
+    // for (int i = 0; i < keys->size - 1; i++) {
+    //     addToList(&a, keys->elements[i]);
+    // }
+    // addToList(&b, keys->elements[keys->size - 1]);
+    // ng_type(&a);
     ng_type(&b);
 
     LOG_DBG("<NAGINATA NG_TYPE");
@@ -873,6 +909,10 @@ static int behavior_naginata_init(const struct device *dev) {
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
         ng_transparent_pressed_bitmap[i] = 0u;
     }
+    // 合成タップ記録をクリア
+    for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
+        ng_chord_tap_pressed_bitmap[i] = 0u;
+    }
 
     return 0;
 };
@@ -902,9 +942,7 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 
     timestamp = event.timestamp;
 
-    // Special handling: map HOME/END to OS-specific actions via ng_* helpers
-    // This allows using `&ng HOME` / `&ng END` in any layer (e.g., Layer 1) to
-    // produce Ctrl+A / Ctrl+E on macOS and Home/End on Windows/Linux.
+    // HOME/END を OS 別に処理
     if (binding->param1 == HOME) {
         ng_home();
         return ZMK_BEHAVIOR_OPAQUE;
@@ -915,6 +953,17 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     }
 
     bool handled_key = is_ng_handled_keycode(binding->param1);
+
+    // 追加: モディファイア押下中は透過にせず、対象キーは「合成タップ」を送出して残留入力を防止
+    if (handled_key && n_hid_modifiers > 0) {
+        // 現在押下中のHIDモディファイアが効いた状態で、対象キーを即時押下→解放
+        raise_zmk_keycode_state_changed_from_encoded(binding->param1, true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(binding->param1, false, timestamp);
+        // 物理リリースはスワローするために記録
+        ng_mark_chord_tap_press(event.position);
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+
     bool use_ng = handled_key && naginata_layer_active;
 
     if (!use_ng) {
@@ -936,6 +985,12 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     timestamp = event.timestamp;
+
+    // 合成タップとして処理したキーの物理リリースはスワロー
+    if (ng_was_chord_tap_press(event.position)) {
+        ng_clear_chord_tap_press(event.position);
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
 
     // Swallow releases for HOME/END when bound through &ng
     if (binding->param1 == HOME || binding->param1 == END) {
