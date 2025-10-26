@@ -766,6 +766,55 @@ static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
     }
 
     uint32_t kc = ev->keycode;
+    uint32_t swapped_kc = kc;
+    bool should_swap = false;
+
+    // OS に応じて GUI キーと Ctrl キーをスワップ
+    if (naginata_config.os == NG_MACOS) {
+        // macOS の場合: GUI ↔ Ctrl をスワップ
+        switch (kc) {
+            case 0xE0: // LEFT_CONTROL
+                swapped_kc = 0xE3; // LEFT_GUI
+                should_swap = true;
+                break;
+            case 0xE3: // LEFT_GUI
+                swapped_kc = 0xE0; // LEFT_CONTROL
+                should_swap = true;
+                break;
+            case 0xE4: // RIGHT_CONTROL
+                swapped_kc = 0xE7; // RIGHT_GUI
+                should_swap = true;
+                break;
+            case 0xE7: // RIGHT_GUI
+                swapped_kc = 0xE4; // RIGHT_CONTROL
+                should_swap = true;
+                break;
+        }
+    }
+    // NG_WINDOWS の場合は should_swap = false のままなのでスワップしない
+
+    // スワップが必要な場合は、元のイベントを消費して新しいイベントを発行
+    if (should_swap) {
+        raise_zmk_keycode_state_changed_from_encoded(swapped_kc, ev->state, ev->timestamp);
+        
+        // HID修飾キーのカウント更新（スワップ後のキーコードで判定）
+        if (swapped_kc >= 0xE0 && swapped_kc <= 0xE7) {
+            if (ev->state) {
+                n_hid_modifiers++;
+                naginata_deactivate_if_needed();
+            } else {
+                if (n_hid_modifiers > 0) {
+                    n_hid_modifiers--;
+                }
+                naginata_try_activate();
+            }
+        }
+        
+        // 元のイベントは消費する
+        return ZMK_EV_EVENT_HANDLED;
+    }
+
+    // スワップ不要な HID 修飾キーの処理
     if (kc >= 0xE0 && kc <= 0xE7) {
         if (ev->state) {
             n_hid_modifiers++;
