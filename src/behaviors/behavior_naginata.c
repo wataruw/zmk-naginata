@@ -51,7 +51,7 @@ extern int64_t timestamp;
 #define B_J (1UL << 16)
 #define B_K (1UL << 17)
 #define B_L (1UL << 18)
-#define B_SEMI (1UL << 19)
+#define B_MINUS (1UL << 19)
 
 #define B_Z (1UL << 20)
 #define B_X (1UL << 21)
@@ -83,9 +83,6 @@ static int8_t n_layer_hold_keys = 0; // レイヤーキー(&mo, &lt)のホール
 static const void *trans_bhv_dev = NULL;
 static const void *mo_bhv_dev = NULL; // &mo (momentary layer)
 static const void *lt_bhv_dev = NULL; // &lt (layer tap)
-
-// 現在押下中のHID修飾キーのビットマスク（0xE0-0xE7 を 0-7bit に対応）
-static uint8_t hid_mods_mask = 0;
 
 // LOWER/RAISE レイヤーのインデックス（必要に応じて変更）
 #ifndef NG_LOWER_LAYER_INDEX
@@ -186,7 +183,7 @@ static inline bool is_ng_handled_keycode(uint32_t kc) {
     case DOT:
     case COMMA:
     case SLASH:
-    case SEMI:
+    case MINUS:
     case HOME:
     case END:
         return true;
@@ -202,7 +199,7 @@ static const uint32_t ng_key[] = {
     [M - A] = B_M,     [N - A] = B_N,         [O - A] = B_O,         [P - A] = B_P,
     [Q - A] = B_Q,     [R - A] = B_R,         [S - A] = B_S,         [T - A] = B_T,
     [U - A] = B_U,     [V - A] = B_V,         [W - A] = B_W,         [X - A] = B_X,
-    [Y - A] = B_Y,     [Z - A] = B_Z,         [SEMI - A] = B_SEMI,   [COMMA - A] = B_COMMA,
+    [Y - A] = B_Y,     [Z - A] = B_Z,         [MINUS - A] = B_MINUS, [COMMA - A] = B_COMMA,
     [DOT - A] = B_DOT, [SLASH - A] = B_SLASH, [SPACE - A] = B_SPACE, [ENTER - A] = B_SPACE,
 };
 
@@ -245,7 +242,7 @@ static naginata_kanamap ngdickana[] = {
     {.shift = NONE    , .douji = B_C            , .kana = {H, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // は
     {.shift = NONE    , .douji = B_X            , .kana = {H, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ひ
     {.shift = B_SPACE , .douji = B_X            , .kana = {H, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ひ
-    {.shift = B_SPACE , .douji = B_SEMI         , .kana = {H, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふ
+    {.shift = B_SPACE , .douji = B_MINUS        , .kana = {H, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふ
     {.shift = NONE    , .douji = B_P            , .kana = {H, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // へ
     {.shift = NONE    , .douji = B_Z            , .kana = {H, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ほ
     {.shift = B_SPACE , .douji = B_Z            , .kana = {H, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ほ
@@ -266,7 +263,7 @@ static naginata_kanamap ngdickana[] = {
     {.shift = B_SPACE , .douji = B_DOT          , .kana = {W, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // わ
     {.shift = B_SPACE , .douji = B_C            , .kana = {W, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // を
     {.shift = NONE    , .douji = B_COMMA        , .kana = {N, N, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ん
-    {.shift = NONE    , .douji = B_SEMI         , .kana = {MINUS, NONE, NONE, NONE, NONE, NONE}, .func = nofunc }, // ー
+    {.shift = NONE    , .douji = B_MINUS        , .kana = {MINUS, NONE, NONE, NONE, NONE, NONE}, .func = nofunc }, // ー
 
     // 濁音
     {.shift = NONE    , .douji = B_J|B_F        , .kana = {G, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // が
@@ -286,15 +283,15 @@ static naginata_kanamap ngdickana[] = {
     {.shift = NONE    , .douji = B_J|B_D        , .kana = {D, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ど
     {.shift = NONE    , .douji = B_J|B_C        , .kana = {B, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ば
     {.shift = NONE    , .douji = B_J|B_X        , .kana = {B, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // び
-    {.shift = 0UL     , .douji = B_F|B_SEMI     , .kana = {B, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぶ
+    {.shift = 0UL     , .douji = B_F|B_MINUS    , .kana = {B, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぶ
     {.shift = 0UL     , .douji = B_F|B_P        , .kana = {B, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // べ
     {.shift = NONE    , .douji = B_J|B_Z        , .kana = {B, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぼ
-    {.shift = 0UL     , .douji = B_F|B_L|B_SEMI , .kana = {V, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ゔ
+    {.shift = 0UL     , .douji = B_F|B_L|B_MINUS, .kana = {V, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ゔ
 
     // 半濁音
     {.shift = NONE    , .douji = B_M|B_C        , .kana = {P, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぱ
     {.shift = NONE    , .douji = B_M|B_X        , .kana = {P, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぴ
-    {.shift = NONE    , .douji = B_V|B_SEMI     , .kana = {P, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぷ
+    {.shift = NONE    , .douji = B_V|B_MINUS    , .kana = {P, U, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぷ
     {.shift = NONE    , .douji = B_V|B_P        , .kana = {P, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぺ
     {.shift = NONE    , .douji = B_M|B_Z        , .kana = {P, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ぽ
 
@@ -361,11 +358,11 @@ static naginata_kanamap ngdickana[] = {
     {.shift = NONE    , .douji = B_M|B_G|B_O    , .kana = {T, Y, E, NONE, NONE, NONE      }, .func = nofunc }, // ちぇ
     {.shift = NONE    , .douji = B_J|B_R|B_O    , .kana = {Z, Y, E, NONE, NONE, NONE      }, .func = nofunc }, // じぇ
     {.shift = NONE    , .douji = B_J|B_G|B_O    , .kana = {D, Y, E, NONE, NONE, NONE      }, .func = nofunc }, // ぢぇ
-    {.shift = NONE    , .douji = B_V|B_SEMI|B_J , .kana = {F, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぁ
-    {.shift = NONE    , .douji = B_V|B_SEMI|B_K , .kana = {F, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぃ
-    {.shift = NONE    , .douji = B_V|B_SEMI|B_O , .kana = {F, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぇ
-    {.shift = NONE    , .douji = B_V|B_SEMI|B_N , .kana = {F, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぉ
-    {.shift = NONE    , .douji = B_V|B_SEMI|B_P , .kana = {F, Y, U, NONE, NONE, NONE      }, .func = nofunc }, // ふゅ
+    {.shift = NONE    , .douji = B_V|B_MINUS|B_J, .kana = {F, A, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぁ
+    {.shift = NONE    , .douji = B_V|B_MINUS|B_K, .kana = {F, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぃ
+    {.shift = NONE    , .douji = B_V|B_MINUS|B_O, .kana = {F, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぇ
+    {.shift = NONE    , .douji = B_V|B_MINUS|B_N, .kana = {F, O, NONE, NONE, NONE, NONE   }, .func = nofunc }, // ふぉ
+    {.shift = NONE    , .douji = B_V|B_MINUS|B_P, .kana = {F, Y, U, NONE, NONE, NONE      }, .func = nofunc }, // ふゅ
     {.shift = NONE    , .douji = B_V|B_K|B_O    , .kana = {I, X, E, NONE, NONE, NONE      }, .func = nofunc }, // いぇ
     {.shift = NONE    , .douji = B_V|B_L|B_K    , .kana = {W, I, NONE, NONE, NONE, NONE   }, .func = nofunc }, // うぃ
     {.shift = NONE    , .douji = B_V|B_L|B_O    , .kana = {W, E, NONE, NONE, NONE, NONE   }, .func = nofunc }, // うぇ
@@ -429,7 +426,7 @@ static naginata_kanamap ngdickana[] = {
     {.shift = B_D|B_F    , .douji = B_J     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFJ    }, // {↑}
     {.shift = B_D|B_F    , .douji = B_K     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFK    }, // +{↑}
     {.shift = B_D|B_F    , .douji = B_L     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFL    }, // +{↑ 7}
-    {.shift = B_D|B_F    , .douji = B_SEMI  , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFSCLN }, // ^i
+    {.shift = B_D|B_F    , .douji = B_MINUS , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFSCLN }, // ^i
     {.shift = B_D|B_F    , .douji = B_N     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFN    }, // {End}
     {.shift = B_D|B_F    , .douji = B_M     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFM    }, // {↓}
     {.shift = B_D|B_F    , .douji = B_COMMA , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_DFCOMM }, // +{↓}
@@ -459,7 +456,7 @@ static naginata_kanamap ngdickana[] = {
     {.shift = B_C|B_V    , .douji = B_J     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVJ    }, // {←}
     {.shift = B_C|B_V    , .douji = B_K     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVK    }, // {→}
     {.shift = B_C|B_V    , .douji = B_L     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVL    }, // {改行}{Space}+{Home}^x{BS}
-    {.shift = B_C|B_V    , .douji = B_SEMI  , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVSCLN }, // ^y
+    {.shift = B_C|B_V    , .douji = B_MINUS , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVSCLN }, // ^y
     {.shift = B_C|B_V    , .douji = B_N     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVN    }, // +{End}
     {.shift = B_C|B_V    , .douji = B_M     , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVM    }, // +{←}
     {.shift = B_C|B_V    , .douji = B_COMMA , .kana = {NONE, NONE, NONE, NONE, NONE, NONE} , .func = ngh_CVCOMM }, // +{→}
@@ -608,27 +605,13 @@ void ng_type(NGList *keys) {
 bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_binding_event event) {
     LOG_DBG(">NAGINATA PRESS");
 
-    uint32_t keycode = binding->param1;
-
-    // 特例: 物理Shiftを押しながら &ng SEMI を押したら「=」(JP配列では Shift+MINUS)を送出する
-    // - HIDのShiftは 0xE1(左) / 0xE5(右)。hid_mods_mask の該当bitが立っており、他の修飾が無い場合に限定
-    // - OS側でShiftが押されているため、ここでは MINUS のタップのみ送れば "=" になる（JP配列想定）
-    if (keycode == SEMI) {
-        const uint8_t shift_bits = (uint8_t)((1U << (0xE1 - 0xE0)) | (1U << (0xE5 - 0xE0)));
-        bool shift_only = (hid_mods_mask & shift_bits) != 0 && (hid_mods_mask & (uint8_t)~shift_bits) == 0;
-        if (shift_only) {
-            LOG_DBG(" NAGINATA special: Shift + SEMI -> MINUS (=> '=')");
-            raise_zmk_keycode_state_changed_from_encoded(MINUS, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(MINUS, false, timestamp);
-            return true;
-        }
-    }
-
     // モディファイ/レイヤーホールド中は無効化
     if (!naginata_layer_active) {
         LOG_DBG("<NAGINATA PRESS (inactive)");
         return true;
     }
+
+    uint32_t keycode = binding->param1;
 
     switch (keycode) {
     case A ... Z:
@@ -637,7 +620,7 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
     case DOT:
     case COMMA:
     case SLASH:
-    case SEMI:
+    case MINUS:
         n_pressed_keys++;
         pressed_keys |= ng_key[keycode - A]; // キーの重ね合わせ
 
@@ -721,15 +704,6 @@ bool naginata_release(struct zmk_behavior_binding *binding,
 
     uint32_t keycode = binding->param1;
 
-    // 特例: 上記の Shift + SEMI 対応のリリース時は何もしない
-    if (keycode == SEMI) {
-        const uint8_t shift_bits = (uint8_t)((1U << (0xE1 - 0xE0)) | (1U << (0xE5 - 0xE0)));
-        bool shift_only = (hid_mods_mask & shift_bits) != 0 && (hid_mods_mask & (uint8_t)~shift_bits) == 0;
-        if (shift_only) {
-            LOG_DBG(" NAGINATA special release: Shift + SEMI handled");
-            return true;
-        }
-    }
 
     switch (keycode) {
     case A ... Z:
@@ -738,7 +712,7 @@ bool naginata_release(struct zmk_behavior_binding *binding,
     case DOT:
     case COMMA:
     case SLASH:
-    case SEMI:
+    case MINUS:
         if (n_pressed_keys > 0)
             n_pressed_keys--;
         if (n_pressed_keys == 0)
@@ -793,12 +767,6 @@ static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
 
     uint32_t kc = ev->keycode;
     if (kc >= 0xE0 && kc <= 0xE7) {
-        uint8_t bit = (uint8_t)1U << (kc - 0xE0);
-        if (ev->state) {
-            hid_mods_mask |= bit;
-        } else {
-            hid_mods_mask &= (uint8_t)~bit;
-        }
         if (ev->state) {
             n_hid_modifiers++;
             naginata_deactivate_if_needed();
