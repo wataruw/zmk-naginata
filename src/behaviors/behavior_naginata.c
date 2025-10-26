@@ -84,6 +84,9 @@ static const void *trans_bhv_dev = NULL;
 static const void *mo_bhv_dev = NULL; // &mo (momentary layer)
 static const void *lt_bhv_dev = NULL; // &lt (layer tap)
 
+// 現在押下中のHID修飾キーのビットマスク（0xE0-0xE7 を 0-7bit に対応）
+static uint8_t hid_mods_mask = 0;
+
 // LOWER/RAISE レイヤーのインデックス（必要に応じて変更）
 #ifndef NG_LOWER_LAYER_INDEX
 #define NG_LOWER_LAYER_INDEX 1
@@ -605,13 +608,27 @@ void ng_type(NGList *keys) {
 bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_binding_event event) {
     LOG_DBG(">NAGINATA PRESS");
 
+    uint32_t keycode = binding->param1;
+
+    // 特例: 物理Shiftを押しながら &ng SEMI を押したら「=」(JP配列では Shift+MINUS)を送出する
+    // - HIDのShiftは 0xE1(左) / 0xE5(右)。hid_mods_mask の該当bitが立っており、他の修飾が無い場合に限定
+    // - OS側でShiftが押されているため、ここでは MINUS のタップのみ送れば "=" になる（JP配列想定）
+    if (keycode == SEMI) {
+        const uint8_t shift_bits = (uint8_t)((1U << (0xE1 - 0xE0)) | (1U << (0xE5 - 0xE0)));
+        bool shift_only = (hid_mods_mask & shift_bits) != 0 && (hid_mods_mask & (uint8_t)~shift_bits) == 0;
+        if (shift_only) {
+            LOG_DBG(" NAGINATA special: Shift + SEMI -> MINUS (=> '=')");
+            raise_zmk_keycode_state_changed_from_encoded(MINUS, true, timestamp);
+            raise_zmk_keycode_state_changed_from_encoded(MINUS, false, timestamp);
+            return true;
+        }
+    }
+
     // モディファイ/レイヤーホールド中は無効化
     if (!naginata_layer_active) {
         LOG_DBG("<NAGINATA PRESS (inactive)");
         return true;
     }
-
-    uint32_t keycode = binding->param1;
 
     switch (keycode) {
     case A ... Z:
@@ -704,6 +721,16 @@ bool naginata_release(struct zmk_behavior_binding *binding,
 
     uint32_t keycode = binding->param1;
 
+    // 特例: 上記の Shift + SEMI 対応のリリース時は何もしない
+    if (keycode == SEMI) {
+        const uint8_t shift_bits = (uint8_t)((1U << (0xE1 - 0xE0)) | (1U << (0xE5 - 0xE0)));
+        bool shift_only = (hid_mods_mask & shift_bits) != 0 && (hid_mods_mask & (uint8_t)~shift_bits) == 0;
+        if (shift_only) {
+            LOG_DBG(" NAGINATA special release: Shift + SEMI handled");
+            return true;
+        }
+    }
+
     switch (keycode) {
     case A ... Z:
     case SPACE:
@@ -766,6 +793,12 @@ static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
 
     uint32_t kc = ev->keycode;
     if (kc >= 0xE0 && kc <= 0xE7) {
+        uint8_t bit = (uint8_t)1U << (kc - 0xE0);
+        if (ev->state) {
+            hid_mods_mask |= bit;
+        } else {
+            hid_mods_mask &= (uint8_t)~bit;
+        }
         if (ev->state) {
             n_hid_modifiers++;
             naginata_deactivate_if_needed();
