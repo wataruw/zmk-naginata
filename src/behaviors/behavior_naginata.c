@@ -28,6 +28,16 @@ extern int64_t timestamp;
 
 // 薙刀式
 
+// HID modifier keycodes (USB HID Usage Page 0x07)
+#define HID_KEYBOARD_LEFT_CONTROL 0xE0
+#define HID_KEYBOARD_LEFT_SHIFT   0xE1
+#define HID_KEYBOARD_LEFT_ALT     0xE2
+#define HID_KEYBOARD_LEFT_GUI     0xE3
+#define HID_KEYBOARD_RIGHT_CONTROL 0xE4
+#define HID_KEYBOARD_RIGHT_SHIFT  0xE5
+#define HID_KEYBOARD_RIGHT_ALT    0xE6
+#define HID_KEYBOARD_RIGHT_GUI    0xE7
+
 // 31キーを32bitの各ビットに割り当てる
 #define B_Q (1UL << 0)
 #define B_W (1UL << 1)
@@ -758,16 +768,10 @@ static void naginata_try_activate(void) {
     }
 }
 
-// HID修飾キーの検出: keycode_state_changed を購読
-static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
-    const struct zmk_keycode_state_changed *ev = as_zmk_keycode_state_changed(eh);
-    if (!ev) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
-
-    uint32_t kc = ev->keycode;
-    if (kc >= 0xE0 && kc <= 0xE7) {
-        if (ev->state) {
+// HID修飾キーのカウントを更新する
+static void update_hid_modifier_count(uint32_t keycode, bool pressed) {
+    if (keycode >= HID_KEYBOARD_LEFT_CONTROL && keycode <= HID_KEYBOARD_RIGHT_GUI) {
+        if (pressed) {
             n_hid_modifiers++;
             naginata_deactivate_if_needed();
         } else {
@@ -777,6 +781,54 @@ static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
             naginata_try_activate();
         }
     }
+}
+
+// HID修飾キーの検出: keycode_state_changed を購読
+static int naginata_keycode_state_changed_listener(const zmk_event_t *eh) {
+    const struct zmk_keycode_state_changed *ev = as_zmk_keycode_state_changed(eh);
+    if (!ev) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    uint32_t kc = ev->keycode;
+    uint32_t swapped_kc = kc;
+    bool should_swap = false;
+
+    // OS に応じて GUI キーと Ctrl キーをスワップ
+    if (naginata_config.os == NG_MACOS) {
+        // macOS の場合: GUI ↔ Ctrl をスワップ
+        switch (kc) {
+            case HID_KEYBOARD_LEFT_CONTROL:
+                swapped_kc = HID_KEYBOARD_LEFT_GUI;
+                should_swap = true;
+                break;
+            case HID_KEYBOARD_LEFT_GUI:
+                swapped_kc = HID_KEYBOARD_LEFT_CONTROL;
+                should_swap = true;
+                break;
+            case HID_KEYBOARD_RIGHT_CONTROL:
+                swapped_kc = HID_KEYBOARD_RIGHT_GUI;
+                should_swap = true;
+                break;
+            case HID_KEYBOARD_RIGHT_GUI:
+                swapped_kc = HID_KEYBOARD_RIGHT_CONTROL;
+                should_swap = true;
+                break;
+        }
+    }
+    // NG_WINDOWS の場合は should_swap = false のままなのでスワップしない
+
+    // スワップが必要な場合は、元のイベントを消費して新しいイベントを発行
+    if (should_swap) {
+        raise_zmk_keycode_state_changed_from_encoded(swapped_kc, ev->state, ev->timestamp);
+        // HID修飾キーのカウント更新（スワップ後のキーコードで判定）
+        update_hid_modifier_count(swapped_kc, ev->state);
+        // 元のイベントは消費する
+        return ZMK_EV_EVENT_HANDLED;
+    }
+
+    // スワップ不要な HID 修飾キーの処理
+    update_hid_modifier_count(kc, ev->state);
 
     return ZMK_EV_EVENT_BUBBLE;
 }
