@@ -943,6 +943,16 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 
     timestamp = event.timestamp;
 
+    // OS別: macOS のときは LCTRL と LGUI を入れ替える（&ng で直接送出）
+    if (binding->param1 == LCTRL || binding->param1 == LGUI) {
+        uint32_t out = binding->param1;
+        if (naginata_config.os == NG_MACOS) {
+            out = (binding->param1 == LCTRL) ? LGUI : LCTRL;
+        }
+        raise_zmk_keycode_state_changed_from_encoded(out, true, timestamp);
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+
     // HOME/END を OS 別に処理
     if (binding->param1 == HOME) {
         ng_home();
@@ -986,6 +996,16 @@ static int on_keymap_binding_released(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     timestamp = event.timestamp;
+
+    // OS別: macOS のときは LCTRL と LGUI を入れ替える（&ng で直接解放）
+    if (binding->param1 == LCTRL || binding->param1 == LGUI) {
+        uint32_t out = binding->param1;
+        if (naginata_config.os == NG_MACOS) {
+            out = (binding->param1 == LCTRL) ? LGUI : LCTRL;
+        }
+        raise_zmk_keycode_state_changed_from_encoded(out, false, timestamp);
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
 
     // 合成タップとして処理したキーの物理リリースはスワロー
     if (ng_was_chord_tap_press(event.position)) {
