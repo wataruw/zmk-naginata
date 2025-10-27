@@ -96,7 +96,7 @@ static bool ng_layer_hold_active = false;
 #define NG_WINDOWS 0
 #define NG_MACOS 1
 #define NG_LINUX 2
-#define NG_IOS 3
+// #define NG_IOS 3
 
 // EEPROMに保存する設定
 typedef union {

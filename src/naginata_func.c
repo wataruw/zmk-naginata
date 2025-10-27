@@ -55,7 +55,6 @@ void switch_to_hex_input() {
             return;
         case NG_LINUX:
             return;
-        case NG_IOS:
     }
 }
 
@@ -70,7 +69,7 @@ void return_to_kana_input() {
             return;
         case NG_WINDOWS:
         case NG_LINUX:
-        case NG_IOS:
+            return;
     }
 }
 
@@ -92,7 +91,6 @@ void press_compose_key() {
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
             k_sleep(K_MSEC(50));
             return;
-        case NG_IOS:
     }
 }
 
@@ -112,7 +110,6 @@ void release_compose_key() {
             raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
             k_sleep(K_MSEC(50));
             return;
-        case NG_IOS:
     }
 }
 
