@@ -277,8 +277,8 @@ void ngh_JKF() { // 「{改行}
 void ngh_JKG() { // ({改行}
     raise_zmk_keycode_state_changed_from_encoded(LS(N8), true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(LS(N8), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    // raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp); 全角で確定だと半角にしたい時に手間なので改行は無し
+    // raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_JKZ() { // ぬ4 《》を「ぬ4」に登録
@@ -318,8 +318,8 @@ void ngh_JKV() { // 」{改行}
 void ngh_JKB() { // ){改行}
     raise_zmk_keycode_state_changed_from_encoded(LS(N9), true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(LS(N9), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    // raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp); 全角で確定だと半角にしたい時に手間なので改行は無し
+    // raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
 }
 
 void ngh_DFY() { // ^c
@@ -370,8 +370,8 @@ void ngh_DFM() { // Alt(Opt) + Shift + ↓
     ng_alt_shift_down();
 }
 
-void ngh_DFCOMM() { // Alt(Opt) + Shift + ↑
-    ng_alt_shift_up();
+void ngh_DFCOMM() { // Ctrl(Cmd) + Shift + k
+    ng_ctrl_shift_k();
 }
 
 void ngh_DFDOT() { // Ctrl(Cmd) + Shift + ]
@@ -933,7 +933,7 @@ void ng_ctrl_shift_bracket_right() {
     }
 }
 
-void ng_alt_shift_down() {
+void ng_alt_shift_down() {  // void ng_alt_shift_up()はng_alt_shift_down()と同じ動作になるためコメントアウト
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
@@ -944,13 +944,16 @@ void ng_alt_shift_down() {
     }
 }
 
-void ng_alt_shift_up() {
+void ng_ctrl_shift_k() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(K)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LC(LS(K)), false, timestamp);
+        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LA(LS(UP)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LA(LS(UP)), false, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(LS(K)), true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(LG(LS(K)), false, timestamp);
         break;
     }
 }

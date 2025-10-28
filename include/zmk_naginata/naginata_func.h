@@ -99,4 +99,4 @@ void ng_alt_up(void);
 void ng_ctrl_shift_bracket_left(void);
 void ng_ctrl_shift_bracket_right(void);
 void ng_alt_shift_down(void);
-void ng_alt_shift_up(void);
+void ng_ctrl_shift_k(void);
