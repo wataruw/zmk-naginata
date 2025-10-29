@@ -171,34 +171,54 @@ void ng_SY() {
     ng_right(1);
     raise_zmk_keycode_state_changed_from_encoded(LSHIFT, false, timestamp);
 }
+
+// 共通ユーティリティ: 数字(0-9)を対応するキーコードに変換
+static int digit_keycode(int d) {
+    switch (d) {
+    case 0: return N0;
+    case 1: return N1;
+    case 2: return N2;
+    case 3: return N3;
+    case 4: return N4;
+    case 5: return N5;
+    case 6: return N6;
+    case 7: return N7;
+    case 8: return N8;
+    case 9: return N9;
+    default: return N0;
+    }
+}
+
+// 共通ユーティリティ: 1キーのタップ
+static inline void tap_key(int keycode) {
+    raise_zmk_keycode_state_changed_from_encoded(keycode, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(keycode, false, timestamp);
+}
+
+// 共通ユーティリティ: 「nu<nn>」の送出（N, U の後に数値の各桁をタイプし、Space→Enterで確定）
+static void register_nu_number(int number) {
+    if (number < 0) number = 0;
+    if (number > 99) number = number % 100; // 想定外を最小限に丸める
+
+    tap_key(N);
+    tap_key(U);
+
+    if (number >= 10) {
+        tap_key(digit_keycode(number / 10));
+    }
+    tap_key(digit_keycode(number % 10));
+
+    k_sleep(K_MSEC(300));
+    tap_key(SPACE);
+    k_sleep(K_MSEC(300));
+    tap_key(ENTER);
+}
 void ngh_JKQ() { // ぬ3 【】を「ぬ3」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N3, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N3, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    register_nu_number(3);
 }
 
 void ngh_JKW() { // ぬ5 ……を「ぬ5」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N5, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N5, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    register_nu_number(5);
 }
 
 void ngh_JKE() { // /*ディ*/
@@ -211,18 +231,7 @@ void ngh_JKE() { // /*ディ*/
 }
 
 void ngh_JKR() { // ぬ6 ――を「ぬ6」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N6, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N6, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    register_nu_number(6);
 }
 
 void ngh_JKT() { // ・
@@ -231,33 +240,11 @@ void ngh_JKT() { // ・
 }
 
 void ngh_JKA() { // ぬ2 『』を「ぬ2」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N2, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N2, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    register_nu_number(2);
 }
 
-void ngh_JKS() { // ぬ1 ⇒を「ぬ1」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N1, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N1, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+void ngh_JKS() { //  ⇒を「ぬ1」に登録
+    register_nu_number(1);
 }
 
 void ngh_JKD() { // ？{改行}
@@ -282,18 +269,7 @@ void ngh_JKG() { // ({改行}
 }
 
 void ngh_JKZ() { // ぬ4 《》を「ぬ4」に登録
-    raise_zmk_keycode_state_changed_from_encoded(N, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N4, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(N4, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    k_sleep(K_MSEC(300));
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    register_nu_number(4);
 }
 
 void ngh_JKX() { // F2
@@ -382,132 +358,64 @@ void ngh_DFSLSH() { // ^u
     ng_hiragana();
 }
 
-void ngh_MCQ() { // ｜{改行}
-    input_unicode_hex(F, F, N5, C);
+void ngh_MCQ() { // 「ぬ21」を用語辞書の「読み方」に登録してください
+    register_nu_number(21);
 }
 
-void ngh_MCW() { // 　　　×　　　×　　　×{改行 2}
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+void ngh_MCW() { // 「ぬ22」を用語辞書の「読み方」に登録してください
+    register_nu_number(22);
 }
 
-void ngh_MCE() { // {Home}{→}{End}{Del 2}{←}
-    ng_home();
-    ng_prev_row();
-    ng_end();
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    ng_next_row();
+void ngh_MCE() { // 「ぬ23」を用語辞書の「読み方」に登録してください
+    register_nu_number(23);
 }
 
-void ngh_MCR() { // {Home}{改行}{Space 1}{←}
-    ng_home();
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    ng_next_row();
+void ngh_MCR() { // 「ぬ24」を用語辞書の「読み方」に登録してください
+    register_nu_number(24);
 }
 
-void ngh_MCT() { // 〇{改行}
-    input_unicode_hex(N3, N0, N0, N7);
+void ngh_MCT() { // 「ぬ25」を用語辞書の「読み方」に登録してください
+    register_nu_number(25);
 }
 
-void ngh_MCA() { // 《{改行}
-    input_unicode_hex(N3, N0, N0, A);
+void ngh_MCA() { // 「ぬ26」を用語辞書の「読み方」に登録してください
+    register_nu_number(26);
 }
 
-void ngh_MCS() { // 【{改行}
-    input_unicode_hex(N3, N0, N1, N0);
+void ngh_MCS() { // 「ぬ27」を用語辞書の「読み方」に登録してください
+    register_nu_number(27);
 }
 
-void ngh_MCD() { // {Home}{→}{End}{Del 4}{←}
-    ng_home();
-    ng_prev_row();
-    ng_end();
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    ng_next_row();
+void ngh_MCD() { // 「ぬ28」を用語辞書の「読み方」に登録してください
+    register_nu_number(28);
 }
 
-void ngh_MCF() { // {Home}{改行}{Space 3}{←}
-    ng_home();
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    ng_next_row();
+void ngh_MCF() { // 「ぬ29」を用語辞書の「読み方」に登録してください
+    register_nu_number(29);
 }
 
-void ngh_MCG() { // {Space 3}
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+void ngh_MCG() { // 「ぬ30」を用語辞書の「読み方」に登録してください
+    register_nu_number(30);
 }
 
-void ngh_MCZ() { // 》{改行}
-    input_unicode_hex(N3, N0, N0, B);
+void ngh_MCZ() { // 「ぬ31」を用語辞書の「読み方」に登録してください
+    register_nu_number(31);
 }
 
-void ngh_MCX() { // 】{改行}
-    input_unicode_hex(N3, N0, N1, N1);
+void ngh_MCX() { // 「ぬ32」を用語辞書の「読み方」に登録してください
+    register_nu_number(32);
 }
 
-void ngh_MCC() { // 」{改行}{改行}
-    input_unicode_hex(N3, N0, N0, D);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+void ngh_MCC() { // 「ぬ33」を用語辞書の「読み方」に登録してください
+    register_nu_number(33);
 }
 
-void ngh_MCV() { // 」{改行}{改行}「{改行}
-    input_unicode_hex(N3, N0, N0, D);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-    input_unicode_hex(N3, N0, N0, C);
+void ngh_MCV() { // 「ぬ34」を用語辞書の「読み方」に登録してください
+    register_nu_number(34);
 }
 
-void ngh_MCB() { // 」{改行}{改行}{Space}
-    input_unicode_hex(N3, N0, N0, D);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+void ngh_MCB() { // 「ぬ35」を用語辞書の「読み方」に登録してください
+    register_nu_number(35);
 }
 
 void ngh_CVY() { // +{Home}
