@@ -31,18 +31,14 @@ static inline void tap_key(int keycode) {
 
 // 薙刀式をオン
 void naginata_on(void) {
-    raise_zmk_keycode_state_changed_from_encoded(LANG1, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LANG1, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(INT4, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(INT4, false, timestamp);
+    tap_key(LANG1);
+    tap_key(INT4);
 }
 
 // 薙刀式をオフ
 // void naginata_off(void) {
-//     raise_zmk_keycode_state_changed_from_encoded(LANG2, true, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(LANG2, false, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(INT5, true, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(INT5, false, timestamp);
+//     tap_key(LANG2);
+//     tap_key(INT5);
 // }
 
 void nofunc() {}
@@ -50,11 +46,9 @@ void nofunc() {}
 void switch_to_hex_input() {
     switch (naginata_config.os) {
         case NG_MACOS:
-            raise_zmk_keycode_state_changed_from_encoded(LANG2, true, timestamp);  // 未確定文字を確定する
-            raise_zmk_keycode_state_changed_from_encoded(LANG2, false, timestamp);
+            tap_key(LANG2);  // 未確定文字を確定する
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(LC(F20), true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LC(F20), false, timestamp);
+            tap_key(LC(F20));
             k_sleep(K_MSEC(50));
             return;
         case NG_WINDOWS:
@@ -67,11 +61,9 @@ void switch_to_hex_input() {
 void return_to_kana_input() {
     switch (naginata_config.os) {
         case NG_MACOS:
-            raise_zmk_keycode_state_changed_from_encoded(LS(LANG1), true, timestamp);  // 未確定文字を確定する
-            raise_zmk_keycode_state_changed_from_encoded(LS(LANG1), false, timestamp);
+            tap_key(LS(LANG1));  // 未確定文字を確定する
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(LANG1, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LANG1, false, timestamp);
+            tap_key(LANG1);
             return;
         case NG_WINDOWS:
         case NG_LINUX:
@@ -86,15 +78,12 @@ void press_compose_key() {
             k_sleep(K_MSEC(50));
             return;
         case NG_WINDOWS:
-            raise_zmk_keycode_state_changed_from_encoded(RIGHT_ALT, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(RIGHT_ALT, false, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(U, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(U, false, timestamp);
+            tap_key(RIGHT_ALT);
+            tap_key(U);
             k_sleep(K_MSEC(50));
             return;
         case NG_LINUX:
-            raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
+            tap_key(LC(LS(U)));
             k_sleep(K_MSEC(50));
             return;
     }
@@ -107,13 +96,11 @@ void release_compose_key() {
             k_sleep(K_MSEC(50));
             return;
         case NG_WINDOWS:
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+            tap_key(ENTER);
             k_sleep(K_MSEC(50));
             return;
         case NG_LINUX:
-            raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(LC(LS(U)), false, timestamp);
+            tap_key(LC(LS(U)));
             k_sleep(K_MSEC(50));
             return;
     }
@@ -124,17 +111,13 @@ void input_unicode_hex(int n1, int n2, int n3, int n4) {
         case NG_MACOS:
             switch_to_hex_input();
             press_compose_key();
-            raise_zmk_keycode_state_changed_from_encoded(n1, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n1, false, timestamp);
+            tap_key(n1);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n2, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n2, false, timestamp);
+            tap_key(n2);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n3, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n3, false, timestamp);
+            tap_key(n3);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n4, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n4, false, timestamp);
+            tap_key(n4);
             k_sleep(K_MSEC(10));
             release_compose_key();
             return_to_kana_input();
@@ -142,21 +125,16 @@ void input_unicode_hex(int n1, int n2, int n3, int n4) {
         case NG_WINDOWS:
         case NG_LINUX:
             press_compose_key();
-            raise_zmk_keycode_state_changed_from_encoded(n1, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n1, false, timestamp);
+            tap_key(n1);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n2, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n2, false, timestamp);
+            tap_key(n2);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n3, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n3, false, timestamp);
+            tap_key(n3);
             k_sleep(K_MSEC(10));
-            raise_zmk_keycode_state_changed_from_encoded(n4, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(n4, false, timestamp);
+            tap_key(n4);
             k_sleep(K_MSEC(10));
             release_compose_key();
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+            tap_key(ENTER);
             return_to_kana_input();
             return;
     }
@@ -223,12 +201,9 @@ void ngh_JKW() { // ぬ5 ……を「ぬ5」に登録
 }
 
 void ngh_JKE() { // /*ディ*/
-    raise_zmk_keycode_state_changed_from_encoded(D, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(D, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(H, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(H, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(I, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(I, false, timestamp);
+    tap_key(D);
+    tap_key(H);
+    tap_key(I);
 }
 
 void ngh_JKR() { // ぬ6 ――を「ぬ6」に登録
@@ -236,8 +211,7 @@ void ngh_JKR() { // ぬ6 ――を「ぬ6」に登録
 }
 
 void ngh_JKT() { // ・
-    raise_zmk_keycode_state_changed_from_encoded(SLASH, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SLASH, false, timestamp);
+    tap_key(SLASH);
 }
 
 void ngh_JKA() { // ぬ2 『』を「ぬ2」に登録
@@ -249,24 +223,17 @@ void ngh_JKS() { //  ⇒を「ぬ1」に登録
 }
 
 void ngh_JKD() { // ？{改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(SLASH), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(SLASH), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(LS(SLASH));
+    tap_key(ENTER);
 }
 
 void ngh_JKF() { // 「{改行}
-    raise_zmk_keycode_state_changed_from_encoded(RBKT, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(RBKT, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(RBKT);
+    tap_key(ENTER);
 }
 
 void ngh_JKG() { // ({改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(N8), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(N8), false, timestamp);
-    // raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp); 全角で確定だと半角にしたい時に手間なので改行は無し
-    // raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(LS(N8)); // 未確定
 }
 
 void ngh_JKZ() { // ぬ4 《》を「ぬ4」に登録
@@ -274,29 +241,21 @@ void ngh_JKZ() { // ぬ4 《》を「ぬ4」に登録
 }
 
 void ngh_JKX() { // F2
-    raise_zmk_keycode_state_changed_from_encoded(F2, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(F2, false, timestamp);
+    tap_key(F2);
 }
 
 void ngh_JKC() { // ！{改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(N1), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(N1), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(LS(N1));
+    tap_key(ENTER);
 }
 
 void ngh_JKV() { // 」{改行}
-    raise_zmk_keycode_state_changed_from_encoded(NUHS, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(NUHS, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(NUHS);
+    tap_key(ENTER);
 }
 
 void ngh_JKB() { // ){改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(N9), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(N9), false, timestamp);
-    // raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp); 全角で確定だと半角にしたい時に手間なので改行は無し
-    // raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    tap_key(LS(N9)); // 未確定
 }
 
 void ngh_DFY() { // ^c
@@ -359,63 +318,63 @@ void ngh_DFSLSH() { // ^u
     ng_hiragana();
 }
 
-void ngh_MCQ() { // 「ぬ21」を用語辞書の「読み方」に登録してください
+void ngh_MCQ() { // 「ぬ21」を用語辞書の「読み方」に登録
     register_nu_number(21);
 }
 
-void ngh_MCW() { // 「ぬ22」を用語辞書の「読み方」に登録してください
+void ngh_MCW() { // 「ぬ22」を用語辞書の「読み方」に登録
     register_nu_number(22);
 }
 
-void ngh_MCE() { // 「ぬ23」を用語辞書の「読み方」に登録してください
+void ngh_MCE() { // 「ぬ23」を用語辞書の「読み方」に登録
     register_nu_number(23);
 }
 
-void ngh_MCR() { // 「ぬ24」を用語辞書の「読み方」に登録してください
+void ngh_MCR() { // 「ぬ24」を用語辞書の「読み方」に登録
     register_nu_number(24);
 }
 
-void ngh_MCT() { // 「ぬ25」を用語辞書の「読み方」に登録してください
+void ngh_MCT() { // 「ぬ25」を用語辞書の「読み方」に登録
     register_nu_number(25);
 }
 
-void ngh_MCA() { // 「ぬ26」を用語辞書の「読み方」に登録してください
+void ngh_MCA() { // 「ぬ26」を用語辞書の「読み方」に登録
     register_nu_number(26);
 }
 
-void ngh_MCS() { // 「ぬ27」を用語辞書の「読み方」に登録してください
+void ngh_MCS() { // 「ぬ27」を用語辞書の「読み方」に登録
     register_nu_number(27);
 }
 
-void ngh_MCD() { // 「ぬ28」を用語辞書の「読み方」に登録してください
+void ngh_MCD() { // 「ぬ28」を用語辞書の「読み方」に登録
     register_nu_number(28);
 }
 
-void ngh_MCF() { // 「ぬ29」を用語辞書の「読み方」に登録してください
+void ngh_MCF() { // 「ぬ29」を用語辞書の「読み方」に登録
     register_nu_number(29);
 }
 
-void ngh_MCG() { // 「ぬ30」を用語辞書の「読み方」に登録してください
+void ngh_MCG() { // 「ぬ30」を用語辞書の「読み方」に登録
     register_nu_number(30);
 }
 
-void ngh_MCZ() { // 「ぬ31」を用語辞書の「読み方」に登録してください
+void ngh_MCZ() { // 「ぬ31」を用語辞書の「読み方」に登録
     register_nu_number(31);
 }
 
-void ngh_MCX() { // 「ぬ32」を用語辞書の「読み方」に登録してください
+void ngh_MCX() { // 「ぬ32」を用語辞書の「読み方」に登録
     register_nu_number(32);
 }
 
-void ngh_MCC() { // 「ぬ33」を用語辞書の「読み方」に登録してください
+void ngh_MCC() { // 「ぬ33」を用語辞書の「読み方」に登録
     register_nu_number(33);
 }
 
-void ngh_MCV() { // 「ぬ34」を用語辞書の「読み方」に登録してください
+void ngh_MCV() { // 「ぬ34」を用語辞書の「読み方」に登録
     register_nu_number(34);
 }
 
-void ngh_MCB() { // 「ぬ35」を用語辞書の「読み方」に登録してください
+void ngh_MCB() { // 「ぬ35」を用語辞書の「読み方」に登録
     register_nu_number(35);
 }
 
@@ -448,8 +407,7 @@ void ngh_CVJ() { // Shift + ←
 }
 
 void ngh_CVK() { // ↑
-    raise_zmk_keycode_state_changed_from_encoded(UP, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(UP, false, timestamp);
+    tap_key(UP);
 }
 
 void ngh_CVL() { // Shift + →
@@ -465,19 +423,16 @@ void ngh_CVN() { // Home
 }
 
 void ngh_CVM() { // ←
-    raise_zmk_keycode_state_changed_from_encoded(LEFT, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LEFT, false, timestamp);
+    tap_key(LEFT);
 }
 
 void ngh_CVCOMM() { // ↓
-    raise_zmk_keycode_state_changed_from_encoded(DOWN, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(DOWN, false, timestamp);
+    tap_key(DOWN);
 
 }
 
 void ngh_CVDOT() { // →
-    raise_zmk_keycode_state_changed_from_encoded(RIGHT, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(RIGHT, false, timestamp);
+    tap_key(RIGHT);
 }
 
 void ngh_CVSLSH() { // End
@@ -488,12 +443,10 @@ void ng_cut() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(X), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(X), false, timestamp);
+        tap_key(LC(X));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(X), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(X), false, timestamp);
+        tap_key(LG(X));
         break;
     }
 }
@@ -502,12 +455,10 @@ void ng_copy() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(C), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(C), false, timestamp);
+        tap_key(LC(C));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(C), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(C), false, timestamp);
+        tap_key(LG(C));
         break;
     }
 }
@@ -516,41 +467,35 @@ void ng_paste() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(V), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(V), false, timestamp);
+        tap_key(LC(V));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(V), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(V), false, timestamp);
+        tap_key(LG(V));
         break;
     }
 }
 
 void ng_up(uint8_t c) {
     for (uint8_t i = 0; i < c; i++) {
-        raise_zmk_keycode_state_changed_from_encoded(UP, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(UP, false, timestamp);
+        tap_key(UP);
     }
 }
 
 void ng_down(uint8_t c) {
     for (uint8_t i = 0; i < c; i++) {
-        raise_zmk_keycode_state_changed_from_encoded(DOWN, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(DOWN, false, timestamp);
+        tap_key(DOWN);
     }
 }
 
 void ng_left(uint8_t c) {
     for (uint8_t i = 0; i < c; i++) {
-        raise_zmk_keycode_state_changed_from_encoded(LEFT, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LEFT, false, timestamp);
+        tap_key(LEFT);
     }
 }
 
 void ng_right(uint8_t c) {
     for (uint8_t i = 0; i < c; i++) {
-        raise_zmk_keycode_state_changed_from_encoded(RIGHT, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(RIGHT, false, timestamp);
+        tap_key(RIGHT);
     }
 }
 
@@ -565,8 +510,7 @@ void ng_next_row() {
         }
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(N), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(N), false, timestamp);
+        tap_key(LG(N));
         break;
     }
 }
@@ -582,8 +526,7 @@ void ng_prev_row() {
         }
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(P), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(P), false, timestamp);
+        tap_key(LG(P));
         break;
     }
 }
@@ -599,8 +542,7 @@ void ng_next_char() {
         }
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(F), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(F), false, timestamp);
+        tap_key(LG(F));
         break;
     }
 }
@@ -616,8 +558,7 @@ void ng_prev_char() {
         }
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(B), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(B), false, timestamp);
+        tap_key(LG(B));
         break;
     }
 }
@@ -626,12 +567,10 @@ void ng_home() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(HOME, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(HOME, false, timestamp);
+        tap_key(HOME);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(A), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(A), false, timestamp);
+        tap_key(LC(A));
         break;
     }
 }
@@ -640,12 +579,10 @@ void ng_end() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(END, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(END, false, timestamp);
+        tap_key(END);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(E), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(E), false, timestamp);
+        tap_key(LC(E));
         break;
     }
 }
@@ -654,12 +591,8 @@ void ng_eiji() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(T), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(T), false, timestamp);
-        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(T), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(T), false, timestamp);
+        tap_key(LC(T));
         break;
     }
 }
@@ -668,13 +601,9 @@ void ng_hiragana() {
     switch (naginata_config.os) {
         case NG_WINDOWS:
         case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(U), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(U), false, timestamp);
-        break;
         case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(U), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(U), false, timestamp);
-        break;
+            tap_key(LC(U));
+            break;
     }
 }
 
@@ -682,12 +611,8 @@ void ng_katakana() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), false, timestamp);
-        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), false, timestamp);
+        tap_key(LC(I));
         break;
     }
 }
@@ -696,12 +621,10 @@ void ng_hankaku() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(O), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(O), false, timestamp);
+        tap_key(LC(O));
         break;
     case NG_MACOS: // Macは半角カタカナのショートカットがでデフォルトでは無いので全角カタカナにしておく 今時使わないだろ？
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(I), false, timestamp);
+        tap_key(LC(I));
         break;
     }
 }
@@ -710,12 +633,8 @@ void ng_zenkaku() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(P), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(P), false, timestamp);
-        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(P), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(P), false, timestamp);
+        tap_key(LC(P));
         break;
     }
 }
@@ -724,12 +643,10 @@ void ng_save() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(S), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(S), false, timestamp);
+        tap_key(LC(S));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(S), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(S), false, timestamp);
+        tap_key(LG(S));
         break;
     }
 }
@@ -738,12 +655,10 @@ void ng_redo() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(Y), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(Y), false, timestamp);
+        tap_key(LC(Y));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LS(LG((S))), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LS(LG((S))), false, timestamp);
+        tap_key(LS(LG((S))));
         break;
     }
 }
@@ -752,12 +667,10 @@ void ng_undo() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(Z), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(Z), false, timestamp);
+        tap_key(LC(Z));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(Z), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(Z), false, timestamp);
+        tap_key(LG(Z));
         break;
     }
 }
@@ -765,18 +678,14 @@ void ng_undo() {
 void ng_saihenkan() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(FSLH), true, timestamp);  // Win + / の方が強力
-        raise_zmk_keycode_state_changed_from_encoded(LG(FSLH), false, timestamp);
+        tap_key(LG(FSLH));  // Win + / の方が強力
         break;
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(INT4, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(INT4, false, timestamp);
+        tap_key(INT4);
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LANG1, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LANG1, false, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LANG1, true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LANG1, false, timestamp);
+        tap_key(LANG1);
+        tap_key(LANG1);
         break;
     }
 }
@@ -785,12 +694,10 @@ void ng_eof() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(END), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(END), false, timestamp);
+        tap_key(LC(END));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(DOWN), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(DOWN), false, timestamp);
+        tap_key(LG(DOWN));
         break;
     }
 }
@@ -799,12 +706,10 @@ void ng_ctrl_bracket_left() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(RBKT), false, timestamp);
+        tap_key(LC(RBKT));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(RBKT), false, timestamp);
+        tap_key(LG(RBKT));
         break;
     }
 }
@@ -813,12 +718,10 @@ void ng_ctrl_bracket_right() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(NUHS), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(NUHS), false, timestamp);
+        tap_key(LC(NUHS));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(NUHS), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(NUHS), false, timestamp);
+        tap_key(LG(NUHS));
         break;
     }
 }
@@ -828,8 +731,7 @@ void ng_alt_down() {
     case NG_WINDOWS:
     case NG_LINUX:
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LA(DOWN), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LA(DOWN), false, timestamp);
+        tap_key(LA(DOWN));
         break;
     }
 }
@@ -839,8 +741,7 @@ void ng_alt_up() {
     case NG_WINDOWS:
     case NG_LINUX:
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LA(UP), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LA(UP), false, timestamp);
+        tap_key(LA(UP));
         break;
     }
 }
@@ -850,8 +751,7 @@ void ng_ctrl_shift_bracket_left() {
     case NG_WINDOWS:
     case NG_LINUX:
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RBKT)), false, timestamp);
+        tap_key(LC(LS(RBKT)));
         break;
     }
 }
@@ -861,19 +761,17 @@ void ng_ctrl_shift_bracket_right() {
     case NG_WINDOWS:
     case NG_LINUX:
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(NUHS)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(NUHS)), false, timestamp);
+        tap_key(LC(LS(NUHS)));
         break;
     }
 }
 
-void ng_alt_shift_down() {  // void ng_alt_shift_up()はng_alt_shift_down()と同じ動作になるためコメントアウト
+void ng_alt_shift_down() {  // void ng_alt_shift_up()はng_alt_shift_down()と同じ動作になるため削除
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LA(LS(DOWN)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LA(LS(DOWN)), false, timestamp);
+        tap_key(LA(LS(DOWN)));
         break;
     }
 }
@@ -882,12 +780,10 @@ void ng_ctrl_shift_k() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(K)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(K)), false, timestamp);
+        tap_key(LC(LS(K)));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(K)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(K)), false, timestamp);
+        tap_key(LG(LS(K)));
         break;
     }
 }
@@ -896,12 +792,10 @@ void ng_ctrl_shift_left() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(LEFT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(LEFT)), false, timestamp);
+        tap_key(LC(LS(LEFT)));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(LEFT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(LEFT)), false, timestamp);
+        tap_key(LG(LS(LEFT)));
         break;
     }
 }
@@ -910,12 +804,10 @@ void ng_ctrl_shift_right() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RIGHT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LC(LS(RIGHT)), false, timestamp);
+        tap_key(LC(LS(RIGHT)));
         break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RIGHT)), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LG(LS(RIGHT)), false, timestamp);
+        tap_key(LG(LS(RIGHT)));
         break;
     }
 }
@@ -924,12 +816,8 @@ void ng_shift_left() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LS(LEFT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LS(LEFT), false, timestamp);
-        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LS(LEFT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LS(LEFT), false, timestamp);
+        tap_key(LS(LEFT));
         break;
     }
 }
@@ -938,12 +826,8 @@ void ng_shift_right() {
     switch (naginata_config.os) {
     case NG_WINDOWS:
     case NG_LINUX:
-        raise_zmk_keycode_state_changed_from_encoded(LS(RIGHT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LS(RIGHT), false, timestamp);
-        break;
     case NG_MACOS:
-        raise_zmk_keycode_state_changed_from_encoded(LS(RIGHT), true, timestamp);
-        raise_zmk_keycode_state_changed_from_encoded(LS(RIGHT), false, timestamp);
+        tap_key(LS(RIGHT));
         break;
     }
 }
