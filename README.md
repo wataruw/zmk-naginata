@@ -22,13 +22,13 @@ Cornix版 ZMK 薙刀式のファームウェアは、**本リポジトリ単独�
 - [wataruw/zmk-naginata](https://github.com/wataruw/zmk-naginata) は、[eswai/zmk-naginata](https://github.com/eswai/zmk-naginata) をフォークしています。
 - [wataruw/zmk-keyboard-cornix](https://github.com/wataruw/zmk-keyboard-cornix) + [wataruw/zmk-naginata](https://github.com/wataruw/zmk-naginata) で、「Cornix版 ZMK 薙刀式」が成り立っています。先達に感謝！
 
-## 本リポジトリのキーマップは使用しません
+## キーマップに関して
 
-Cornix＋薙刀式のキーマップは、[wataruw/zmk-keyboard-cornix](https://github.com/wataruw/zmk-keyboard-cornix)のconfig/cornix.keymapです。  
+Cornix＋薙刀式のキーマップは、[wataruw/zmk-keyboard-cornix](https://github.com/wataruw/zmk-keyboard-cornix)のconfig/cornix.keymapです。本リポジトリのキーマップは使用しません。(後で消しておきます)  
 レイヤー3に薙刀式のキーマップが定義されています。  
-**&ng** xx 定義(behavior)を本リポジトリのプログラムが読み込み、動作します。  
+**&ng** xx 定義を本リポジトリのプログラムが読み込み、動作します。  
 
-- ZMKではVialは使えません(自分が知らないだけかも)。機能が劣っていますが、ZMK Studioというサイトもあります。ただ、今のところ機能的に使えないので、ここでは触れません。( ⇒ ここら辺がZMKが採用されなかったりゆうですかね？？)
+- ZMKファームウェアではVialは使えません(自分が知らないだけかも)。ZMK Studioというサイトもありますが、今のところ機能が少なくVialほど使えないので、ここでは触れません。( ⇒ ここら辺がZMKファームウェアがCornixで採用されなかった理由ですかね？？)
 - 定義は難しくないので、一緒にファームウェア生成にトライしてみませんか？簡単ですよ！
 
 ## つまり本リポジトリは……
@@ -52,7 +52,7 @@ eswaiさんの「ZMK 薙刀式」は大岡さんのキーマップを忠実に�
 - 左側のキーボード親指部分、1番内側のキーをShft&Spaceキーに割り当てています。
 - 右側のキーボード親指部分、1番内側のキーをShft&Enterキーに割り当てています。
 - 右側のキーボード親指部分、Shft&Enterキーの右側のキーにBackSpaceキーを割り当てています。
-  - 薙刀式では、Uキーの表面にBackSpaceキーが割り当ててありますが、さらに押しやすい位置に独立キーとしてBackSpaceキーを割り当てたので、Uキーの裏面の「さ」を表面に持って来ました。
+  - 薙刀式では、Uキーの表面にBackSpaceキーが割り当ててありますが、さらに押しやすい位置に独立したキーとしてBackSpaceキーを割り当てたので、Uキーの裏面の「さ」を表面に持って来ました。
   - 当初は裏面の「さ」は消していましたが、既に裏面の「さ」に慣れていたのか、よく誤爆したので裏面の「さ」はそのままにしています。
 - 右側の小指、薬指で独立してカーソルキー操作ができるので…… (私はo51goでも同じ位置にカーソルキーを配置していました)
   - TとYキーの変換・カーソル用の横書き時：上下(↑↓)、縦書き時：右左(←→)を廃止し、Tキーに「、+ 確定」を、Yキーに「。+ 確定」を割り当てました。
