@@ -278,44 +278,45 @@ void ngh_DFP() { // ^z
     ng_undo();
 }
 
-void ngh_DFH() { // Ctrl(Cmd) + [
-    ng_ctrl_bracket_left();
+void ngh_DFH() { // Ctrl(Cmd) + Shift + ←
+    ng_ctrl_shift_left();
 }
 
-void ngh_DFJ() { // Alt(Opt) + ↓
-    ng_alt_down();
+void ngh_DFJ() { // Shift + ←
+    ng_shift_left();
 }
 
-void ngh_DFK() { // Alt(Opt) + ↑
-    ng_alt_up();
+void ngh_DFK() { // ↑
+    tap_key(UP);
 }
 
-void ngh_DFL() { // Ctrl(Cmd) + ]
-    ng_ctrl_bracket_right();
+void ngh_DFL() { // Shift + →
+    ng_shift_right();
 }
 
-void ngh_DFSCLN() { // ^i
-    ng_katakana();
+void ngh_DFSCLN() { // Ctrl(Cmd) + Shift + →
+    ng_ctrl_shift_right();
 }
 
-void ngh_DFN() { // Ctrl(Cmd) + Shift + [
-    ng_ctrl_shift_bracket_left();
+void ngh_DFN() { // Home
+    ng_home();
 }
 
-void ngh_DFM() { // Alt(Opt) + Shift + ↓
-    ng_alt_shift_down();
+void ngh_DFM() { // ←
+    tap_key(LEFT);
 }
 
-void ngh_DFCOMM() { // Ctrl(Cmd) + Shift + k
-    ng_ctrl_shift_k();
+void ngh_DFCOMM() { // ↓
+    tap_key(DOWN);
+
 }
 
-void ngh_DFDOT() { // Ctrl(Cmd) + Shift + ]
-    ng_ctrl_shift_bracket_right();
+void ngh_DFDOT() { // →
+    tap_key(RIGHT);
 }
 
-void ngh_DFSLSH() { // ^u
-    ng_hiragana();
+void ngh_DFSLSH() { // End
+    ng_end();
 }
 
 void ngh_MCQ() { // 「ぬ21」を用語辞書の「読み方」に登録
@@ -398,45 +399,43 @@ void ngh_CVP() { // 全角変換
     ng_zenkaku();
 }
 
-void ngh_CVH() { // Ctrl(Cmd) + Shift + ←
-    ng_ctrl_shift_left();
+void ngh_CVH() { // F12
+    tap_key(F12);
 }
 
-void ngh_CVJ() { // Shift + ←
-    ng_shift_left();
+void ngh_CVJ() { // Ctrl(Cmd) + [
+    ng_ctrl_bracket_left(); 
 }
 
-void ngh_CVK() { // ↑
-    tap_key(UP);
+void ngh_CVK() { // Alt(Opt) + ↑
+    ng_alt_up();
 }
 
-void ngh_CVL() { // Shift + →
-    ng_shift_right();
+void ngh_CVL() { // Ctrl(Cmd) + ]
+    ng_ctrl_bracket_right();
 }
 
-void ngh_CVSCLN() { // Ctrl(Cmd) + Shift + →
-    ng_ctrl_shift_right();
+void ngh_CVSCLN() { // Ctrl(Cmd) + Shift + k
+    ng_ctrl_shift_k();
 }
 
-void ngh_CVN() { // Home
-    ng_home();
+void ngh_CVN() { // Shift + F12
+    tap_key(LS(F12));
 }
 
-void ngh_CVM() { // ←
-    tap_key(LEFT);
+void ngh_CVM() { // Ctrl(Cmd) + Shift + [
+    ng_ctrl_shift_bracket_left();
+}
+void ngh_CVCOMM() { // Alt(Opt) + ↓
+    ng_alt_down();
 }
 
-void ngh_CVCOMM() { // ↓
-    tap_key(DOWN);
-
+void ngh_CVDOT() { // Ctrl(Cmd) + Shift + ]
+    ng_ctrl_shift_bracket_right();
 }
 
-void ngh_CVDOT() { // →
-    tap_key(RIGHT);
-}
-
-void ngh_CVSLSH() { // End
-    ng_end();
+void ngh_CVSLSH() { // Alt(Opt) + Shift + ↓
+    ng_alt_shift_down();
 }
 
 void ng_cut() {
