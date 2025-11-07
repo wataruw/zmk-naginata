@@ -29,6 +29,7 @@ Cornix＋薙刀式のキーマップは、[wataruw/zmk-keyboard-cornix](https://
 **&ng** xx 定義を本リポジトリのプログラムが読み込み、動作します。  
 
 - ZMKファームウェアではVialは使えません(自分が知らないだけかも)。ZMK Studioというサイトもありますが、今のところ機能が少なくVialほど使えないので、ここでは触れません。( ⇒ ここら辺がZMKファームウェアがCornixで採用されなかった理由ですかね？？)
+- [Keymap Editor](https://nickcoutsos.github.io/keymap-editor/) がありました。後で調査！
 - 定義は難しくないので、一緒にファームウェア生成にトライしてみませんか？簡単ですよ！
 
 ## つまり本リポジトリは……
