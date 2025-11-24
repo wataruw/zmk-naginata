@@ -898,6 +898,11 @@ static int naginata_settings_set(const char *name, size_t len, settings_read_cb 
         
         int rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
         if (rc >= 0) {
+            // Validate the loaded configuration
+            if (naginata_config.os > 3) {
+                LOG_WRN("Invalid OS value %d, resetting to default", naginata_config.os);
+                naginata_config.os = NG_MACOS;
+            }
             LOG_INF("Loaded naginata config: os=%d, tategaki=%d", 
                     naginata_config.os, naginata_config.tategaki);
             return 0;
