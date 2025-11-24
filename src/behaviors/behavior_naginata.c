@@ -947,30 +947,19 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    // Register settings handler
-    int ret = settings_subsys_init();
-    if (ret) {
-        LOG_ERR("Settings subsystem init failed: %d", ret);
-    }
-
-    ret = settings_register(&naginata_settings_conf);
+    // Register settings handler - settings will be loaded automatically by system
+    int ret = settings_register(&naginata_settings_conf);
     if (ret) {
         LOG_ERR("Failed to register settings handler: %d", ret);
+    } else {
+        LOG_INF("Registered settings handler");
     }
 
-    // Load settings from storage
-    ret = settings_load();
-    if (ret) {
-        LOG_ERR("Failed to load settings: %d", ret);
-    }
-
-    // Set default if not loaded (if os is out of range, it wasn't loaded)
-    if (naginata_config.os > NG_LINUX) {
-        naginata_config.os = NG_WINDOWS;  // Default to Windows
-        naginata_config.tategaki = false;
-        LOG_INF("Using default config: os=%d, tategaki=%d", 
-                naginata_config.os, naginata_config.tategaki);
-    }
+    // Set default values - will be overwritten if settings are loaded
+    naginata_config.os = NG_WINDOWS;  // Default to Windows
+    naginata_config.tategaki = false;
+    LOG_INF("Initialized with default config: os=%d, tategaki=%d", 
+            naginata_config.os, naginata_config.tategaki);
 
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
