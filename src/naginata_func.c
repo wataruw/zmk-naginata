@@ -16,7 +16,7 @@ int64_t timestamp;
 #define NG_LINUX (uint8_t)2
 #define NG_IOS (uint8_t)3
 
-typedef union {
+typedef struct {
     uint8_t os : 2;
     bool tategaki : true;
 } user_config_t;
