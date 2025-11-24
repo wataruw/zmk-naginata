@@ -9,6 +9,7 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/settings/settings.h>
 #include <string.h>
 
 #include <zmk/event_manager.h>
@@ -99,9 +100,9 @@ static bool ng_layer_hold_active = false;
 // #define NG_IOS 3
 
 // EEPROMに保存する設定
-typedef union {
+typedef struct {
     uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+    bool tategaki : 1; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -885,6 +886,33 @@ ZMK_SUBSCRIPTION(behavior_naginata_position, zmk_position_state_changed);
 
 // 薙刀式
 
+// Settings handler for persistent configuration
+static int naginata_settings_set(const char *name, size_t len, settings_read_cb read_cb,
+                                  void *cb_arg) {
+    const char *next;
+    
+    if (settings_name_steq(name, "config", &next) && !next) {
+        if (len != sizeof(naginata_config)) {
+            return -EINVAL;
+        }
+        
+        int rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
+        if (rc >= 0) {
+            LOG_INF("Loaded naginata config: os=%d, tategaki=%d", 
+                    naginata_config.os, naginata_config.tategaki);
+            return 0;
+        }
+        return rc;
+    }
+    
+    return -ENOENT;
+}
+
+static struct settings_handler naginata_settings_conf = {
+    .name = "naginata",
+    .h_set = naginata_settings_set,
+};
+
 static int behavior_naginata_init(const struct device *dev) {
     LOG_DBG("NAGINATA INIT");
 
@@ -904,8 +932,6 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
-
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
         ng_transparent_pressed_bitmap[i] = 0u;
@@ -913,6 +939,17 @@ static int behavior_naginata_init(const struct device *dev) {
     // 合成タップ記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
         ng_chord_tap_pressed_bitmap[i] = 0u;
+    }
+
+    // Register and load settings
+    int rc = settings_register(&naginata_settings_conf);
+    if (rc) {
+        LOG_ERR("Failed to register settings handler: %d", rc);
+    }
+    
+    rc = settings_load_subtree("naginata");
+    if (rc) {
+        LOG_WRN("Failed to load settings: %d", rc);
     }
 
     return 0;
@@ -926,18 +963,28 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
+            settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+            LOG_INF("OS mode changed to Windows");
             return ZMK_BEHAVIOR_OPAQUE;
         case F16:
             naginata_config.os = NG_MACOS;
+            settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+            LOG_INF("OS mode changed to macOS");
             return ZMK_BEHAVIOR_OPAQUE;
         case F17:
             naginata_config.os = NG_LINUX;
+            settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+            LOG_INF("OS mode changed to Linux");
             return ZMK_BEHAVIOR_OPAQUE;
         case F18:
             naginata_config.tategaki = true;
+            settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+            LOG_INF("Writing direction changed to vertical");
             return ZMK_BEHAVIOR_OPAQUE;
         case F19:
             naginata_config.tategaki = false;
+            settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+            LOG_INF("Writing direction changed to horizontal");
             return ZMK_BEHAVIOR_OPAQUE;
     }
 
