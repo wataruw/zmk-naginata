@@ -105,7 +105,7 @@ static bool ng_layer_hold_active = false;
 // EEPROMに保存する設定
 typedef struct {
     uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+    bool tategaki : 1; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;

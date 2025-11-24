@@ -18,7 +18,7 @@ int64_t timestamp;
 
 typedef struct {
     uint8_t os : 2;
-    bool tategaki : true;
+    bool tategaki : 1;
 } user_config_t;
 
 user_config_t naginata_config;
