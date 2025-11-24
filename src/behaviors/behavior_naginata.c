@@ -9,6 +9,7 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/settings/settings.h>
 #include <string.h>
 
 #include <zmk/event_manager.h>
@@ -99,9 +100,9 @@ static bool ng_layer_hold_active = false;
 // #define NG_IOS 3
 
 // EEPROMに保存する設定
-typedef union {
+typedef struct {
     uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+    bool tategaki : 1; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -885,6 +886,30 @@ ZMK_SUBSCRIPTION(behavior_naginata_position, zmk_position_state_changed);
 
 // 薙刀式
 
+// Settings subsystem handlers for persistence
+#define NAGINATA_SETTINGS_SUBTREE "naginata"
+#define NAGINATA_SETTINGS_CONFIG_KEY "config"
+
+static int naginata_settings_set(const char *name, size_t len, settings_read_cb read_cb,
+                                  void *cb_arg) {
+    const char *next;
+    
+    if (settings_name_steq(name, NAGINATA_SETTINGS_CONFIG_KEY, &next) && !next) {
+        if (len != sizeof(user_config_t)) {
+            return -EINVAL;
+        }
+        
+        return read_cb(cb_arg, &naginata_config, sizeof(user_config_t));
+    }
+    
+    return -ENOENT;
+}
+
+static struct settings_handler naginata_settings_conf = {
+    .name = NAGINATA_SETTINGS_SUBTREE,
+    .h_set = naginata_settings_set,
+};
+
 static int behavior_naginata_init(const struct device *dev) {
     LOG_DBG("NAGINATA INIT");
 
@@ -904,7 +929,23 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
+    // Initialize config with default values
+    naginata_config.os = NG_WINDOWS;  // Default to Windows (0)
+    naginata_config.tategaki = false;
+    
+    // Register settings handler and load saved settings
+    int ret = settings_register(&naginata_settings_conf);
+    if (ret < 0) {
+        LOG_WRN("Failed to register naginata settings: %d", ret);
+    } else {
+        ret = settings_load_subtree(NAGINATA_SETTINGS_SUBTREE);
+        if (ret < 0) {
+            LOG_WRN("Failed to load naginata settings: %d", ret);
+        } else {
+            LOG_INF("Naginata settings loaded: os=%d, tategaki=%d", 
+                    naginata_config.os, naginata_config.tategaki);
+        }
+    }
 
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
@@ -926,18 +967,33 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
+            settings_save_one(NAGINATA_SETTINGS_SUBTREE "/" NAGINATA_SETTINGS_CONFIG_KEY,
+                            &naginata_config, sizeof(user_config_t));
+            LOG_INF("OS setting changed to Windows");
             return ZMK_BEHAVIOR_OPAQUE;
         case F16:
             naginata_config.os = NG_MACOS;
+            settings_save_one(NAGINATA_SETTINGS_SUBTREE "/" NAGINATA_SETTINGS_CONFIG_KEY,
+                            &naginata_config, sizeof(user_config_t));
+            LOG_INF("OS setting changed to macOS");
             return ZMK_BEHAVIOR_OPAQUE;
         case F17:
             naginata_config.os = NG_LINUX;
+            settings_save_one(NAGINATA_SETTINGS_SUBTREE "/" NAGINATA_SETTINGS_CONFIG_KEY,
+                            &naginata_config, sizeof(user_config_t));
+            LOG_INF("OS setting changed to Linux");
             return ZMK_BEHAVIOR_OPAQUE;
         case F18:
             naginata_config.tategaki = true;
+            settings_save_one(NAGINATA_SETTINGS_SUBTREE "/" NAGINATA_SETTINGS_CONFIG_KEY,
+                            &naginata_config, sizeof(user_config_t));
+            LOG_INF("Tategaki setting changed to true");
             return ZMK_BEHAVIOR_OPAQUE;
         case F19:
             naginata_config.tategaki = false;
+            settings_save_one(NAGINATA_SETTINGS_SUBTREE "/" NAGINATA_SETTINGS_CONFIG_KEY,
+                            &naginata_config, sizeof(user_config_t));
+            LOG_INF("Tategaki setting changed to false");
             return ZMK_BEHAVIOR_OPAQUE;
     }
 
