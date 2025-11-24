@@ -7,6 +7,7 @@
 #define DT_DRV_COMPAT zmk_behavior_naginata
 
 #include <zephyr/device.h>
+#include <zephyr/settings/settings.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
@@ -99,9 +100,9 @@ static bool ng_layer_hold_active = false;
 // #define NG_IOS 3
 
 // EEPROMに保存する設定
-typedef union {
+typedef struct {
     uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+    bool tategaki : 1; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -885,6 +886,24 @@ ZMK_SUBSCRIPTION(behavior_naginata_position, zmk_position_state_changed);
 
 // 薙刀式
 
+#ifdef CONFIG_SETTINGS
+static int naginata_config_set(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg) {
+    const char *next;
+    if (settings_name_steq(name, "config", &next) && !next) {
+        if (len != sizeof(naginata_config)) {
+            return -EINVAL;
+        }
+        return read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
+    }
+    return -ENOENT;
+}
+
+struct settings_handler naginata_conf = {
+    .name = "naginata",
+    .h_set = naginata_config_set
+};
+#endif
+
 static int behavior_naginata_init(const struct device *dev) {
     LOG_DBG("NAGINATA INIT");
 
@@ -904,8 +923,6 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
-
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
         ng_transparent_pressed_bitmap[i] = 0u;
@@ -914,6 +931,14 @@ static int behavior_naginata_init(const struct device *dev) {
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
         ng_chord_tap_pressed_bitmap[i] = 0u;
     }
+
+    #ifdef CONFIG_SETTINGS
+    if (settings_subsys_init()) {
+        LOG_ERR("Failed to initialize settings subsystem");
+    }
+    settings_register(&naginata_conf);
+    settings_load_subtree("naginata");
+    #endif
 
     return 0;
 };
@@ -926,19 +951,19 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
-            return ZMK_BEHAVIOR_OPAQUE;
+            goto save_config;
         case F16:
             naginata_config.os = NG_MACOS;
-            return ZMK_BEHAVIOR_OPAQUE;
+            goto save_config;
         case F17:
             naginata_config.os = NG_LINUX;
-            return ZMK_BEHAVIOR_OPAQUE;
+            goto save_config;
         case F18:
             naginata_config.tategaki = true;
-            return ZMK_BEHAVIOR_OPAQUE;
+            goto save_config;
         case F19:
             naginata_config.tategaki = false;
-            return ZMK_BEHAVIOR_OPAQUE;
+            goto save_config;
     }
 
     timestamp = event.timestamp;
@@ -988,6 +1013,12 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     // &ng で処理する場合は記録をクリア（万一残っていてもミスマッチしないように）
     ng_clear_transparent_press(event.position);
     naginata_press(binding, event);
+    return ZMK_BEHAVIOR_OPAQUE;
+
+save_config:
+    #ifdef CONFIG_SETTINGS
+    settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+    #endif
     return ZMK_BEHAVIOR_OPAQUE;
 }
 
