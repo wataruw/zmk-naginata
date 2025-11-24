@@ -891,6 +891,7 @@ static int naginata_config_set(const char *name, size_t len, settings_read_cb re
     const char *next;
     if (settings_name_steq(name, "config", &next) && !next) {
         if (len != sizeof(naginata_config)) {
+            LOG_WRN("Settings size mismatch: expected %zu, got %zu", sizeof(naginata_config), len);
             return -EINVAL;
         }
         return read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
@@ -935,10 +936,16 @@ static int behavior_naginata_init(const struct device *dev) {
     #ifdef CONFIG_SETTINGS
     int ret = settings_subsys_init();
     if (ret && ret != -EALREADY) {
-        LOG_ERR("Failed to initialize settings subsystem: %d", ret);
+        LOG_ERR("Failed to initialize settings subsystem: %d. Settings will not be persisted.", ret);
     }
-    settings_register(&naginata_conf);
-    settings_load_subtree("naginata");
+    ret = settings_register(&naginata_conf);
+    if (ret) {
+        LOG_ERR("Failed to register settings handler: %d", ret);
+    }
+    ret = settings_load_subtree("naginata");
+    if (ret) {
+        LOG_WRN("Failed to load settings: %d. Using defaults.", ret);
+    }
     #endif
 
     return 0;
@@ -1018,7 +1025,12 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 
 save_config:
     #ifdef CONFIG_SETTINGS
-    settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+    {
+        int ret = settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+        if (ret) {
+            LOG_ERR("Failed to save settings: %d", ret);
+        }
+    }
     #endif
     return ZMK_BEHAVIOR_OPAQUE;
 }
