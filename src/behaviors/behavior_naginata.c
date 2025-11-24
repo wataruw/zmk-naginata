@@ -933,8 +933,9 @@ static int behavior_naginata_init(const struct device *dev) {
     }
 
     #ifdef CONFIG_SETTINGS
-    if (settings_subsys_init()) {
-        LOG_ERR("Failed to initialize settings subsystem");
+    int ret = settings_subsys_init();
+    if (ret && ret != -EALREADY) {
+        LOG_ERR("Failed to initialize settings subsystem: %d", ret);
     }
     settings_register(&naginata_conf);
     settings_load_subtree("naginata");
