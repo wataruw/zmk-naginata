@@ -10,6 +10,7 @@
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
+#include <zephyr/settings/settings.h>
 
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
@@ -99,12 +100,54 @@ static bool ng_layer_hold_active = false;
 // #define NG_IOS 3
 
 // EEPROMに保存する設定
-typedef union {
-    uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+typedef struct {
+    uint8_t os;  // NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS
+    bool tategaki; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
+
+// Settings subsystem handler
+#define NAGINATA_SETTINGS_KEY "naginata/config"
+
+static int naginata_settings_set(const char *name, size_t len, settings_read_cb read_cb,
+                                  void *cb_arg) {
+    const char *next;
+    int rc;
+
+    if (settings_name_steq(name, "data", &next) && !next) {
+        if (len != sizeof(naginata_config)) {
+            return -EINVAL;
+        }
+
+        rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
+        if (rc >= 0) {
+            LOG_INF("Loaded naginata_config: os=%d, tategaki=%d", 
+                    naginata_config.os, naginata_config.tategaki);
+            return 0;
+        }
+        return rc;
+    }
+
+    return -ENOENT;
+}
+
+static struct settings_handler naginata_settings_conf = {
+    .name = "naginata",
+    .h_set = naginata_settings_set,
+};
+
+static int naginata_save_settings(void) {
+    int ret = settings_save_one(NAGINATA_SETTINGS_KEY "/data", &naginata_config, 
+                                sizeof(naginata_config));
+    if (ret) {
+        LOG_ERR("Failed to save naginata settings: %d", ret);
+    } else {
+        LOG_INF("Saved naginata_config: os=%d, tategaki=%d", 
+                naginata_config.os, naginata_config.tategaki);
+    }
+    return ret;
+}
 
 // --- Press/Release 対応のための状態管理 --------------------------------------
 // &ng が押下時に TRANSPARENT を返したキー位置を記録しておき、
@@ -904,7 +947,30 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
+    // Register settings handler
+    int ret = settings_subsys_init();
+    if (ret) {
+        LOG_ERR("Settings subsystem init failed: %d", ret);
+    }
+
+    ret = settings_register(&naginata_settings_conf);
+    if (ret) {
+        LOG_ERR("Failed to register settings handler: %d", ret);
+    }
+
+    // Load settings from storage
+    ret = settings_load();
+    if (ret) {
+        LOG_ERR("Failed to load settings: %d", ret);
+    }
+
+    // Set default if not loaded (if os is out of range, it wasn't loaded)
+    if (naginata_config.os > NG_LINUX) {
+        naginata_config.os = NG_WINDOWS;  // Default to Windows
+        naginata_config.tategaki = false;
+        LOG_INF("Using default config: os=%d, tategaki=%d", 
+                naginata_config.os, naginata_config.tategaki);
+    }
 
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
@@ -926,18 +992,23 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
+            naginata_save_settings();
             return ZMK_BEHAVIOR_OPAQUE;
         case F16:
             naginata_config.os = NG_MACOS;
+            naginata_save_settings();
             return ZMK_BEHAVIOR_OPAQUE;
         case F17:
             naginata_config.os = NG_LINUX;
+            naginata_save_settings();
             return ZMK_BEHAVIOR_OPAQUE;
         case F18:
             naginata_config.tategaki = true;
+            naginata_save_settings();
             return ZMK_BEHAVIOR_OPAQUE;
         case F19:
             naginata_config.tategaki = false;
+            naginata_save_settings();
             return ZMK_BEHAVIOR_OPAQUE;
     }
 
