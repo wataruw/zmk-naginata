@@ -97,7 +97,7 @@ static bool ng_layer_hold_active = false;
 #define NG_WINDOWS 0
 #define NG_MACOS 1
 #define NG_LINUX 2
-// #define NG_IOS 3
+#define NG_IOS 3
 
 // EEPROMに保存する設定
 typedef struct {
@@ -899,7 +899,7 @@ static int naginata_settings_set(const char *name, size_t len, settings_read_cb 
         int rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
         if (rc >= 0) {
             // Validate the loaded configuration
-            if (naginata_config.os > 3) {
+            if (naginata_config.os > NG_IOS) {
                 LOG_WRN("Invalid OS value %d, resetting to default", naginata_config.os);
                 naginata_config.os = NG_MACOS;
             }
@@ -946,15 +946,21 @@ static int behavior_naginata_init(const struct device *dev) {
         ng_chord_tap_pressed_bitmap[i] = 0u;
     }
 
+    // Set default configuration values
+    naginata_config.os = NG_MACOS;
+    naginata_config.tategaki = false;
+
     // Register and load settings
     int rc = settings_register(&naginata_settings_conf);
     if (rc) {
-        LOG_ERR("Failed to register settings handler: %d", rc);
+        LOG_ERR("Failed to register settings handler: %d, using defaults", rc);
+        return 0; // Continue with default values
     }
     
     rc = settings_load_subtree("naginata");
     if (rc) {
-        LOG_WRN("Failed to load settings: %d", rc);
+        LOG_WRN("Failed to load settings: %d, using defaults", rc);
+        // Continue with default values, not a fatal error
     }
 
     return 0;
