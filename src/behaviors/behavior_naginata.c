@@ -99,9 +99,9 @@ static bool ng_layer_hold_active = false;
 // #define NG_IOS 3
 
 // EEPROMに保存する設定
-typedef union {
+typedef struct {
     uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
+    bool tategaki : 1; // true: 縦書き, false: 横書き
 } user_config_t;
 
 extern user_config_t naginata_config;
@@ -904,7 +904,10 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
+    // naginata_config is a static variable and will be zero-initialized
+    // Since NG_WINDOWS = 0, naginata_config.os will default to NG_WINDOWS
+    // TODO: Add settings_load_subtree call here when settings infrastructure is available
+    // settings_load_subtree("naginata");
 
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
@@ -923,22 +926,34 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     // F15..F19 設定切り替え
+    bool config_changed = false;
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
-            return ZMK_BEHAVIOR_OPAQUE;
+            config_changed = true;
+            break;
         case F16:
             naginata_config.os = NG_MACOS;
-            return ZMK_BEHAVIOR_OPAQUE;
+            config_changed = true;
+            break;
         case F17:
             naginata_config.os = NG_LINUX;
-            return ZMK_BEHAVIOR_OPAQUE;
+            config_changed = true;
+            break;
         case F18:
             naginata_config.tategaki = true;
-            return ZMK_BEHAVIOR_OPAQUE;
+            config_changed = true;
+            break;
         case F19:
             naginata_config.tategaki = false;
-            return ZMK_BEHAVIOR_OPAQUE;
+            config_changed = true;
+            break;
+    }
+
+    if (config_changed) {
+        // TODO: Add settings_save_one call here when settings infrastructure is available
+        // settings_save_one("naginata/config", &naginata_config, sizeof(naginata_config));
+        return ZMK_BEHAVIOR_OPAQUE;
     }
 
     timestamp = event.timestamp;
