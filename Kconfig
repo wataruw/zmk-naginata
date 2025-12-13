@@ -1,3 +1,7 @@
 config NAGINATA
     bool "Enable Naginata"
     default y
+    select SETTINGS
+    help
+      Enable Naginata-shiki input method behavior.
+      Settings (OS type, tategaki mode) are saved to NVS.

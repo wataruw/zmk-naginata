@@ -2,6 +2,7 @@
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/settings/settings.h>
 
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
@@ -9,19 +10,65 @@
 #include <zmk/behavior_queue.h>
 #include <zmk_naginata/naginata_func.h>
 
+LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+
 int64_t timestamp;
 
-#define NG_WINDOWS (uint8_t)0
-#define NG_MACOS (uint8_t)1
-#define NG_LINUX (uint8_t)2
-#define NG_IOS (uint8_t)3
+// グローバル設定変数
+user_config_t naginata_config = {
+    .os = NG_WINDOWS,
+    .tategaki = false
+};
 
-typedef union {
-    uint8_t os : 2;
-    bool tategaki : true;
-} user_config_t;
+// Settings サブシステムのハンドラー
+#define NAGINATA_SETTINGS_KEY "naginata/config"
 
-user_config_t naginata_config;
+static int naginata_settings_set(const char *name, size_t len,
+                                  settings_read_cb read_cb, void *cb_arg) {
+    const char *next;
+    int rc;
+
+    if (settings_name_steq(name, "config", &next) && !next) {
+        if (len != sizeof(naginata_config)) {
+            LOG_WRN("Invalid naginata config size: %d (expected %d)", len, sizeof(naginata_config));
+            return -EINVAL;
+        }
+        rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
+        if (rc >= 0) {
+            LOG_INF("Loaded naginata config: os=%d, tategaki=%d", 
+                    naginata_config.os, naginata_config.tategaki);
+            return 0;
+        }
+        return rc;
+    }
+    return -ENOENT;
+}
+
+STRUCT_SECTION_ITERABLE(settings_handler_static, naginata_settings_handler) = {
+    .name = "naginata",
+    .h_set = naginata_settings_set,
+};
+
+// 設定をNVS（EEPROM）に保存
+int naginata_config_save(void) {
+    int rc = settings_save_one(NAGINATA_SETTINGS_KEY, &naginata_config, sizeof(naginata_config));
+    if (rc) {
+        LOG_ERR("Failed to save naginata config: %d", rc);
+    } else {
+        LOG_INF("Saved naginata config: os=%d, tategaki=%d", 
+                naginata_config.os, naginata_config.tategaki);
+    }
+    return rc;
+}
+
+// 設定を初期化（NVSから読み込み）
+int naginata_config_init(void) {
+    // settings_load() は ZMK が起動時に自動で呼び出すため、
+    // ここでは何もしなくてもハンドラーが呼ばれる
+    LOG_INF("Naginata config initialized: os=%d, tategaki=%d", 
+            naginata_config.os, naginata_config.tategaki);
+    return 0;
+}
 
 // 共通ユーティリティ: 1キーのタップ
 static inline void tap_key(int keycode) {

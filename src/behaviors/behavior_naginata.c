@@ -93,18 +93,7 @@ static const void *lt_bhv_dev = NULL; // &lt (layer tap)
 #endif
 static bool ng_layer_hold_active = false;
 
-#define NG_WINDOWS 0
-#define NG_MACOS 1
-#define NG_LINUX 2
-// #define NG_IOS 3
-
-// EEPROMに保存する設定
-typedef union {
-    uint8_t os : 2;  // 2 bits can store values 0-3 (NG_WINDOWS, NG_MACOS, NG_LINUX, NG_IOS)
-    bool tategaki : true; // true: 縦書き, false: 横書き
-} user_config_t;
-
-extern user_config_t naginata_config;
+// user_config_t と naginata_config は naginata_func.h で定義/宣言されている
 
 // --- Press/Release 対応のための状態管理 --------------------------------------
 // &ng が押下時に TRANSPARENT を返したキー位置を記録しておき、
@@ -904,7 +893,9 @@ static int behavior_naginata_init(const struct device *dev) {
         }
     }
 
-    naginata_config.os =  NG_MACOS;
+    // NVSから設定を読み込み（settings_load()はZMK起動時に自動で呼ばれ、
+    // naginata_configは既に読み込み済みの状態になっている）
+    naginata_config_init();
 
     // 透明押下記録をクリア
     for (int i = 0; i < (NG_MAX_POSITIONS + 31) / 32; i++) {
@@ -922,22 +913,27 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                      struct zmk_behavior_binding_event event) {
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
-    // F15..F19 設定切り替え
+    // F15..F19 設定切り替え（設定変更後はNVSに保存）
     switch (binding->param1) {
         case F15:
             naginata_config.os = NG_WINDOWS;
+            naginata_config_save();
             return ZMK_BEHAVIOR_OPAQUE;
         case F16:
             naginata_config.os = NG_MACOS;
+            naginata_config_save();
             return ZMK_BEHAVIOR_OPAQUE;
         case F17:
             naginata_config.os = NG_LINUX;
+            naginata_config_save();
             return ZMK_BEHAVIOR_OPAQUE;
         case F18:
             naginata_config.tategaki = true;
+            naginata_config_save();
             return ZMK_BEHAVIOR_OPAQUE;
         case F19:
             naginata_config.tategaki = false;
+            naginata_config_save();
             return ZMK_BEHAVIOR_OPAQUE;
     }
 
