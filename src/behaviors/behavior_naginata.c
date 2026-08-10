@@ -609,11 +609,23 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
         n_pressed_keys++;
         pressed_keys |= ng_key[keycode - A]; // キーの重ね合わせ
 
-        if (keycode == SPACE || keycode == ENTER) {
+       if (keycode == SPACE || keycode == ENTER) {
             NGList a;
-            initializeList(&a);
-            addToList(&a, keycode);
-            addToListArray(&nginput, &a);
+            NGList b;
+            if (nginput.size > 0) {
+                copyList(&(nginput.elements[nginput.size - 1]), &a);
+                copyList(&a, &b);
+                addToList(&b, keycode);
+            }
+            if (nginput.size > 0 && number_of_candidates(&b) > 0) {
+                removeFromListArrayAt(&nginput, nginput.size - 1);
+                addToListArray(&nginput, &b);
+            } else {
+                NGList e;
+                initializeList(&e);
+                addToList(&e, keycode);
+                addToListArray(&nginput, &e);
+            }
         } else {
             NGList a;
             NGList b;
@@ -622,22 +634,17 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
                 copyList(&a, &b);
                 addToList(&b, keycode);
             }
-
-            // 前のキーとの同時押しの可能性があるなら前に足す
-            // 同じキー連打を除外
             if (nginput.size > 0 && a.elements[a.size - 1] != keycode &&
                 number_of_candidates(&b) > 0) {
                 removeFromListArrayAt(&nginput, nginput.size - 1);
                 addToListArray(&nginput, &b);
             } else {
-                // 連続シフトではない
                 NGList e;
                 initializeList(&e);
                 addToList(&e, keycode);
                 addToListArray(&nginput, &e);
             }
         }
-
         // 連続シフト
         static uint32_t rs[10][2] = {{D, F},     {C, V}, {J, K}, {M, COMMA}, {SPACE, 0},
                                      {ENTER, 0}, {F, 0}, {V, 0}, {J, 0},     {M, 0}};
